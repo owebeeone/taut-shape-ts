@@ -317,8 +317,18 @@ export type LogOutput =
   | {
       readonly type: "producer_stop";  // on Close, and on ≥1→0 readers under stop_when=last_reader (D6)
       readonly reason: "last_reader_gone" | "closed" | "failed";
+    }
+  | {
+      readonly type: "diagnostic";     // LogDiagnostic — engine warning, code only, no free text (D18)
+      readonly severity: "warn" | "error";
+      readonly code: "push_after_terminal";  // v0's only case: Push after Seal/Close (D19)
     };
 ```
+
+The `diagnostic` output is not addressed and needs no reader: the shell routes
+it to console/logging idiomatically — `console.warn` by default, or an injected
+sink (e.g. `LogShellOptions.onDiagnostic`) — **never inside the engine**, which
+is sans-io (D18). Code-only keeps the oracle byte-stable across languages.
 
 ### 4.4 The engine: `LogNode`
 
