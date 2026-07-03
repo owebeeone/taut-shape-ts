@@ -9,7 +9,7 @@
 // names, D13); property names are idiomatic camelCase. The oracle loader and CBOR
 // service layer own the fixed camelCase<->snake_case field mapping.
 
-import type { LogState, LogErrorCode, LogStopReason, LogSeverity, LogDiagCode } from "./taut/gen/shape_log.ts";
+import type { LogState, LogErrorCode, LogStopReason, LogSeverity, LogDiagCode } from "../taut/gen/shape_log.ts";
 
 // Re-export the generated state/enum families so consumers import them from the
 // public barrel rather than reaching into the generated module.

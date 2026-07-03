@@ -4,14 +4,20 @@
   "description": "Pure-TypeScript implementation of Taut delivery shapes (log first) — a mailbox-engine LogNode kept honest by the cross-language behavioral oracle.",
   "type": "module",
   "license": "MIT",
+  "bin": {
+    "taut-shape-tool": "./src/cli.ts"
+  },
   "exports": {
     ".": "./src/index.ts",
-    "./engine": "./src/node.ts",
+    "./engine": "./src/log/node.ts",
     "./cli": "./src/cli.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "tool": "node --experimental-strip-types src/cli.ts",
+    "node": "node --experimental-strip-types src/cli.ts node",
+    "client": "node --experimental-strip-types src/cli.ts client"
   },
   "engines": {
     "node": ">=22"

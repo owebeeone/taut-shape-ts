@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { LogNode } from "../src/node.ts";
+import { LogNode } from "../src/log/node.ts";
 import {
   loadCorpus,
   toInput,
@@ -22,7 +22,7 @@ import {
   expectedOutput,
   vectorLogId,
   type WireMsg,
-} from "../src/oracle.ts";
+} from "../src/log/oracle.ts";
 
 const CORPUS_PATH = fileURLToPath(
   new URL("../../taut-shape/corpus/log.v0.json", import.meta.url),

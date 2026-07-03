@@ -11,7 +11,7 @@ import { Table } from "./session.ts";
 import type { HeldRead } from "./session.ts";
 import { Window } from "./window.ts";
 import type { Limits, Lifecycle } from "./window.ts";
-import type { LogState } from "./taut/gen/shape_log.ts";
+import type { LogState } from "../taut/gen/shape_log.ts";
 
 /** ProducerStop policy (D6). A log never read must not spuriously stop its
  *  producer, so the ≥1→0 reader transition is what fires under "last_reader". */

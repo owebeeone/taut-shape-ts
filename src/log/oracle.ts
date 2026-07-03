@@ -10,10 +10,10 @@
 // sides through the vendored jsoncodec so the comparison is against the canonical
 // wire projection, never against JS object identity or field order.
 
-import { loadSchema, type SchemaIndex } from "./taut/schema.ts";
-import { fromJsonValue, toJsonValue } from "./taut/jsoncodec.ts";
+import { loadSchema, type SchemaIndex } from "../taut/schema.ts";
+import { fromJsonValue, toJsonValue } from "../taut/jsoncodec.ts";
 import type { Cursor, LogError, LogInput, LogOutput } from "./messages.ts";
-import irJson from "./taut/gen/shape_log.ir.json" with { type: "json" };
+import irJson from "../taut/gen/shape_log.ir.json" with { type: "json" };
 
 export const SCHEMA: SchemaIndex = loadSchema(irJson);
 

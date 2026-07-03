@@ -27,7 +27,68 @@ Phases 0–2 landed:
   vector through `LogNode.handle` with whole-output equality. **All 25 vectors
   pass.**
 
-Phases 3–5 (shell/stream sugar, CLI, interop matrix) are the next increments.
+- **Phase 4 (tool)** — the conformance/interop CLI (`src/cli.ts` + `src/framing.ts`)
+  with `node` and `client` modes over the shared stdin/stdout framing. Byte-for-byte
+  matched to `taut-shape-rs` (its node mode is the reference). A ts↔ts self-pair over
+  crossed pipes is green (`tests/cli.test.ts`).
+
+The shell/stream sugar and the full cross-language interop matrix are the next
+increments.
+
+## Tool (node / client)
+
+`taut-shape-tool` is the conformance/interop CLI. Run it with Node ≥ 22's native
+TypeScript (`--experimental-strip-types`) — no build step, no dependencies:
+
+```sh
+npm run tool -- <node|client> [options]
+# or directly:
+node --experimental-strip-types src/cli.ts <node|client> [options]
+```
+
+**Data channel** (both modes, stdin↔stdout): each frame is `u32-LE length` +
+`1 tag byte` (the `LogMsgType` wire value, 0..=11) + the message's CBOR body;
+`length` counts the tag byte plus the body. This is exactly the framing the
+`taut-shape-rs` node mode implements — the shared reference.
+
+**`node`** — run a `LogNode` behind the framing. Reads input frames on stdin,
+feeds the engine, writes all resulting output frames to stdout in order after
+each input, flushes; EOF ⇒ exit 0.
+
+```
+--stop-when <last_reader|explicit>   ProducerStop policy (default: last_reader)
+--script <FILE>                      producer script (see below)
+```
+
+`--script FILE` drives the producer deterministically so the client can own
+stdin. The file is a JSON array of `{ "after_frames": k, "inputs": [ … ] }`:
+after the *k*-th client frame has been processed, each producer message in
+`inputs` (a `push`/`seal`/`close`/`evict`/… in taut **jsoncodec** form — `type`-
+tagged, base64 payloads, i64-as-string) is injected in order and its outputs are
+written too. `after_frames: 0` fires before any client frame.
+
+**`client`** — the reading cursor loop. Sends a `LogReadRequest` (`log_id`
+`"log-A"`, no `timeout_ms` ⇒ a held read), awaits response frames on stdin; on
+`data` it advances the cursor and re-reads, on `expired` it resumes from
+`next_cursor` (the earliest resumable position, D9) and re-reads, and on the
+terminal `eof`/`closed`/`failed` it emits a final state and exits 0. Every
+received response is echoed as an OOB JSONL transcript line on **stderr**
+(jsoncodec form, one object per line).
+
+```
+--stream-id <S>       stream id to read as (default: s1)
+--from <SEQ>          starting cursor seq (default: 0 = START)
+--max-records <N>     max_records per read request (default: unset)
+```
+
+Self-pair over crossed pipes (client stdout → node stdin, node stdout → client
+stdin), driven by a producer script:
+
+```sh
+node --experimental-strip-types src/cli.ts client --stream-id s1 --from 0 \
+  | node --experimental-strip-types src/cli.ts node --script prod.json \
+  | …   # (crossed — see tests/cli.test.ts for the concurrent-drain harness)
+```
 
 ## Quickstart
 

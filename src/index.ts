@@ -13,8 +13,8 @@ export type {
   LogStopReason,
   LogSeverity,
   LogDiagCode,
-} from "./messages.ts";
-export { START } from "./messages.ts";
+} from "./log/messages.ts";
+export { START } from "./log/messages.ts";
 
-export { LogNode } from "./node.ts";
-export type { LogNodeOptions, StopWhen } from "./node.ts";
+export { LogNode } from "./log/node.ts";
+export type { LogNodeOptions, StopWhen } from "./log/node.ts";
