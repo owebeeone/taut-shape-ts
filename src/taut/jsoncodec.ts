@@ -20,8 +20,7 @@
 // Like proto3 JSON, this profile does NOT carry unknown/residual fields; the CBOR
 // wire is the forward-compat-preserving form. A "native value" here matches the
 // vendored codec.ts convention: a plain object keyed by field name, enums as
-// member-name strings, bytes as Uint8Array, ints as JS numbers (the log schema's
-// ints all fit in 2^53), maps as JS Map.
+// member-name strings, bytes as Uint8Array, ints as bigint, maps as JS Map.
 
 import type { SchemaIndex, TypeRef } from "./schema.ts";
 
@@ -92,7 +91,7 @@ function keyStr(k: Native): string {
 }
 
 function keyParse(kt: TypeRef, s: string): Native {
-  if (kt.k === "scalar" && kt.scalar === "int") return Number(s);
+  if (kt.k === "scalar" && kt.scalar === "int") return BigInt(s);
   if (kt.k === "scalar" && kt.scalar === "bool") return s === "true";
   return s;
 }
@@ -103,7 +102,7 @@ function fromJson(schema: SchemaIndex, t: TypeRef, jv: JsonValue): Native {
     case "scalar":
       switch (t.scalar) {
         case "int":
-          return Number(jv); // string (or number) -> number
+          return BigInt(jv); // canonical JSON string (or exact integer) -> bigint
         case "bytes":
           return base64Decode(jv as string);
         case "float": {

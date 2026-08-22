@@ -249,92 +249,56 @@
   },
   "enums": [
     {
-      "name": "LogMsgType",
+      "name": "ValueMsgType",
       "members": {
-        "push": 0,
-        "seal": 1,
-        "close": 2,
-        "read": 3,
-        "end_stream": 4,
-        "timer_expired": 5,
-        "evict": 6,
-        "read_response": 7,
-        "set_timer": 8,
-        "cancel_timer": 9,
-        "producer_stop": 10,
-        "diagnostic": 11
+        "set": 0,
+        "read": 1,
+        "read_response": 2,
+        "diagnostic": 3
       }
     },
     {
-      "name": "LogState",
+      "name": "ValueState",
       "members": {
         "data": 0,
-        "would_block": 1,
-        "eof": 2,
-        "closed": 3,
-        "failed": 4,
-        "expired": 5
+        "empty": 1
       }
     },
     {
-      "name": "LogErrorCode",
-      "members": {
-        "unknown_log": 0,
-        "producer_error": 1,
-        "internal": 2
-      }
-    },
-    {
-      "name": "LogStopReason",
-      "members": {
-        "last_reader_gone": 0,
-        "closed": 1,
-        "failed": 2
-      }
-    },
-    {
-      "name": "LogSeverity",
+      "name": "ValueSeverity",
       "members": {
         "warn": 0,
         "error": 1
       }
     },
     {
-      "name": "LogDiagCode",
+      "name": "ValueDiagCode",
       "members": {
-        "push_after_terminal": 0
+        "equivocation": 0
       }
     }
   ],
   "messages": [
     {
-      "name": "LogCursor",
+      "name": "ValueStamp",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "seq",
+          "name": "origin",
           "tag": 1,
           "type": {
             "k": "scalar",
-            "scalar": "int"
+            "scalar": "str"
           },
           "optional": false,
           "transient": false,
           "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogRecord",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
+        },
         {
           "name": "seq",
-          "tag": 1,
+          "tag": 2,
           "type": {
             "k": "scalar",
             "scalar": "int"
@@ -344,175 +308,89 @@
           "merge": null
         },
         {
-          "name": "payload",
-          "tag": 2,
-          "type": {
-            "k": "scalar",
-            "scalar": "bytes"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogError",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "code",
-          "tag": 1,
-          "type": {
-            "k": "enum",
-            "name": "LogErrorCode"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "message",
-          "tag": 2,
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogPush",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "payload",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "bytes"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogSeal",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": []
-    },
-    {
-      "name": "LogClose",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "error",
-          "tag": 1,
-          "type": {
-            "k": "msg",
-            "name": "LogError"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogReadRequest",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "log_id",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "stream_id",
-          "tag": 2,
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "cursor",
+          "name": "lamport",
           "tag": 3,
           "type": {
-            "k": "msg",
-            "name": "LogCursor"
+            "k": "scalar",
+            "scalar": "int"
           },
-          "optional": true,
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "ValueSet",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "origin",
+          "tag": 1,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
           "transient": false,
           "merge": null
         },
         {
-          "name": "max_records",
+          "name": "seq",
+          "tag": 2,
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "lamport",
+          "tag": 3,
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "prev",
           "tag": 4,
           "type": {
             "k": "scalar",
-            "scalar": "int"
+            "scalar": "bytes"
           },
           "optional": true,
           "transient": false,
           "merge": null
         },
         {
-          "name": "max_bytes",
+          "name": "payload",
           "tag": 5,
           "type": {
             "k": "scalar",
-            "scalar": "int"
+            "scalar": "bytes"
           },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "timeout_ms",
-          "tag": 6,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": true,
+          "optional": false,
           "transient": false,
           "merge": null
         }
       ]
     },
     {
-      "name": "LogEndStream",
+      "name": "ValueReadRequest",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "log_id",
+          "name": "value_id",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -536,51 +414,13 @@
       ]
     },
     {
-      "name": "LogTimerExpired",
+      "name": "ValueReadResponse",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "token",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogEvict",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "up_to_seq",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogReadResponse",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "log_id",
+          "name": "value_id",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -602,27 +442,24 @@
           "merge": null
         },
         {
-          "name": "records",
+          "name": "value",
           "tag": 3,
           "type": {
-            "k": "list",
-            "elem": {
-              "k": "msg",
-              "name": "LogRecord"
-            }
+            "k": "scalar",
+            "scalar": "bytes"
           },
-          "optional": false,
+          "optional": true,
           "transient": false,
           "merge": null
         },
         {
-          "name": "next_cursor",
+          "name": "winner",
           "tag": 4,
           "type": {
             "k": "msg",
-            "name": "LogCursor"
+            "name": "ValueStamp"
           },
-          "optional": false,
+          "optional": true,
           "transient": false,
           "merge": null
         },
@@ -631,48 +468,7 @@
           "tag": 5,
           "type": {
             "k": "enum",
-            "name": "LogState"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "error",
-          "tag": 6,
-          "type": {
-            "k": "msg",
-            "name": "LogError"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogSetTimer",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "token",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "ms",
-          "tag": 2,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
+            "name": "ValueState"
           },
           "optional": false,
           "transient": false,
@@ -681,45 +477,7 @@
       ]
     },
     {
-      "name": "LogCancelTimer",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "token",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogProducerStop",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "reason",
-          "tag": 1,
-          "type": {
-            "k": "enum",
-            "name": "LogStopReason"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogDiagnostic",
+      "name": "ValueDiagnostic",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -729,7 +487,7 @@
           "tag": 1,
           "type": {
             "k": "enum",
-            "name": "LogSeverity"
+            "name": "ValueSeverity"
           },
           "optional": false,
           "transient": false,
@@ -740,7 +498,7 @@
           "tag": 2,
           "type": {
             "k": "enum",
-            "name": "LogDiagCode"
+            "name": "ValueDiagCode"
           },
           "optional": false,
           "transient": false,

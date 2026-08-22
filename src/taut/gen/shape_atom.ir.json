@@ -249,43 +249,41 @@
   },
   "enums": [
     {
-      "name": "LogMsgType",
+      "name": "AtomMsgType",
       "members": {
-        "push": 0,
+        "replace": 0,
         "seal": 1,
         "close": 2,
         "read": 3,
         "end_stream": 4,
         "timer_expired": 5,
-        "evict": 6,
-        "read_response": 7,
-        "set_timer": 8,
-        "cancel_timer": 9,
-        "producer_stop": 10,
-        "diagnostic": 11
+        "read_response": 6,
+        "set_timer": 7,
+        "cancel_timer": 8,
+        "producer_stop": 9,
+        "diagnostic": 10
       }
     },
     {
-      "name": "LogState",
+      "name": "AtomState",
       "members": {
         "data": 0,
         "would_block": 1,
         "eof": 2,
         "closed": 3,
-        "failed": 4,
-        "expired": 5
+        "failed": 4
       }
     },
     {
-      "name": "LogErrorCode",
+      "name": "AtomErrorCode",
       "members": {
-        "unknown_log": 0,
+        "unknown_atom": 0,
         "producer_error": 1,
         "internal": 2
       }
     },
     {
-      "name": "LogStopReason",
+      "name": "AtomStopReason",
       "members": {
         "last_reader_gone": 0,
         "closed": 1,
@@ -293,28 +291,28 @@
       }
     },
     {
-      "name": "LogSeverity",
+      "name": "AtomSeverity",
       "members": {
         "warn": 0,
         "error": 1
       }
     },
     {
-      "name": "LogDiagCode",
+      "name": "AtomDiagCode",
       "members": {
-        "push_after_terminal": 0
+        "replace_after_terminal": 0
       }
     }
   ],
   "messages": [
     {
-      "name": "LogCursor",
+      "name": "AtomVersion",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "seq",
+          "name": "version",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -327,13 +325,13 @@
       ]
     },
     {
-      "name": "LogRecord",
+      "name": "AtomValue",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "seq",
+          "name": "version",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -357,7 +355,7 @@
       ]
     },
     {
-      "name": "LogError",
+      "name": "AtomError",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -367,7 +365,7 @@
           "tag": 1,
           "type": {
             "k": "enum",
-            "name": "LogErrorCode"
+            "name": "AtomErrorCode"
           },
           "optional": false,
           "transient": false,
@@ -387,7 +385,7 @@
       ]
     },
     {
-      "name": "LogPush",
+      "name": "AtomReplace",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -406,14 +404,14 @@
       ]
     },
     {
-      "name": "LogSeal",
+      "name": "AtomSeal",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": []
     },
     {
-      "name": "LogClose",
+      "name": "AtomClose",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -423,7 +421,7 @@
           "tag": 1,
           "type": {
             "k": "msg",
-            "name": "LogError"
+            "name": "AtomError"
           },
           "optional": true,
           "transient": false,
@@ -432,13 +430,13 @@
       ]
     },
     {
-      "name": "LogReadRequest",
+      "name": "AtomReadRequest",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "log_id",
+          "name": "atom_id",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -460,18 +458,18 @@
           "merge": null
         },
         {
-          "name": "cursor",
+          "name": "version",
           "tag": 3,
           "type": {
             "k": "msg",
-            "name": "LogCursor"
+            "name": "AtomVersion"
           },
           "optional": true,
           "transient": false,
           "merge": null
         },
         {
-          "name": "max_records",
+          "name": "timeout_ms",
           "tag": 4,
           "type": {
             "k": "scalar",
@@ -480,39 +478,17 @@
           "optional": true,
           "transient": false,
           "merge": null
-        },
-        {
-          "name": "max_bytes",
-          "tag": 5,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "timeout_ms",
-          "tag": 6,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
         }
       ]
     },
     {
-      "name": "LogEndStream",
+      "name": "AtomEndStream",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "log_id",
+          "name": "atom_id",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -536,7 +512,7 @@
       ]
     },
     {
-      "name": "LogTimerExpired",
+      "name": "AtomTimerExpired",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -555,32 +531,13 @@
       ]
     },
     {
-      "name": "LogEvict",
+      "name": "AtomReadResponse",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "up_to_seq",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogReadResponse",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "log_id",
+          "name": "atom_id",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -602,25 +559,22 @@
           "merge": null
         },
         {
-          "name": "records",
+          "name": "value",
           "tag": 3,
           "type": {
-            "k": "list",
-            "elem": {
-              "k": "msg",
-              "name": "LogRecord"
-            }
+            "k": "msg",
+            "name": "AtomValue"
           },
-          "optional": false,
+          "optional": true,
           "transient": false,
           "merge": null
         },
         {
-          "name": "next_cursor",
+          "name": "next_version",
           "tag": 4,
           "type": {
             "k": "msg",
-            "name": "LogCursor"
+            "name": "AtomVersion"
           },
           "optional": false,
           "transient": false,
@@ -631,7 +585,7 @@
           "tag": 5,
           "type": {
             "k": "enum",
-            "name": "LogState"
+            "name": "AtomState"
           },
           "optional": false,
           "transient": false,
@@ -642,7 +596,7 @@
           "tag": 6,
           "type": {
             "k": "msg",
-            "name": "LogError"
+            "name": "AtomError"
           },
           "optional": true,
           "transient": false,
@@ -651,7 +605,7 @@
       ]
     },
     {
-      "name": "LogSetTimer",
+      "name": "AtomSetTimer",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -681,7 +635,7 @@
       ]
     },
     {
-      "name": "LogCancelTimer",
+      "name": "AtomCancelTimer",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -700,7 +654,7 @@
       ]
     },
     {
-      "name": "LogProducerStop",
+      "name": "AtomProducerStop",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -710,7 +664,7 @@
           "tag": 1,
           "type": {
             "k": "enum",
-            "name": "LogStopReason"
+            "name": "AtomStopReason"
           },
           "optional": false,
           "transient": false,
@@ -719,7 +673,7 @@
       ]
     },
     {
-      "name": "LogDiagnostic",
+      "name": "AtomDiagnostic",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -729,7 +683,7 @@
           "tag": 1,
           "type": {
             "k": "enum",
-            "name": "LogSeverity"
+            "name": "AtomSeverity"
           },
           "optional": false,
           "transient": false,
@@ -740,7 +694,7 @@
           "tag": 2,
           "type": {
             "k": "enum",
-            "name": "LogDiagCode"
+            "name": "AtomDiagCode"
           },
           "optional": false,
           "transient": false,

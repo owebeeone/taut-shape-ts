@@ -1,8 +1,8 @@
 # @owebeeone/taut-shape
 
-Pure-TypeScript implementation of Taut delivery shapes (`log` first). A
-**mailbox-engine `LogNode`** — `handle(input): LogOutput[]`, no I/O, no clock, no
-callbacks (D1) — kept honest by the cross-language **behavioral oracle**.
+Pure-TypeScript implementation of Taut delivery shapes. Its `AtomNode`, `LogNode`,
+bounded live `StreamNode`, and attributed LWW `ValueNode` are mailbox engines with no I/O, clock, or callbacks,
+kept honest by cross-language behavioral oracles.
 
 `taut-shape-rs` is the reference (it generates the oracle); this repo reproduces
 the oracle in TypeScript. No wasm, no Rust binding, no native addon.
@@ -32,8 +32,8 @@ Phases 0–2 landed:
   matched to `taut-shape-rs` (its node mode is the reference). A ts↔ts self-pair over
   crossed pipes is green (`tests/cli.test.ts`).
 
-The shell/stream sugar and the full cross-language interop matrix are the next
-increments.
+The full cross-language interop matrix (`../taut-shape/matrix/driver.py`) runs
+this tool as the `ts` language for all three implemented shapes.
 
 ## Tool (node / client)
 
@@ -41,21 +41,22 @@ increments.
 TypeScript (`--experimental-strip-types`) — no build step, no dependencies:
 
 ```sh
-npm run tool -- <node|client> [options]
+pnpm run tool -- <node|client> [options]
 # or directly:
 node --experimental-strip-types src/cli.ts <node|client> [options]
 ```
 
 **Data channel** (both modes, stdin↔stdout): each frame is `u32-LE length` +
-`1 tag byte` (the `LogMsgType` wire value, 0..=11) + the message's CBOR body;
+`1 tag byte` (the selected shape's message-type enum value) + the message's CBOR body;
 `length` counts the tag byte plus the body. This is exactly the framing the
 `taut-shape-rs` node mode implements — the shared reference.
 
-**`node`** — run a `LogNode` behind the framing. Reads input frames on stdin,
+**`node`** — run the selected shape engine behind the framing. Reads input frames on stdin,
 feeds the engine, writes all resulting output frames to stdout in order after
 each input, flushes; EOF ⇒ exit 0.
 
 ```
+--shape <NAME>                       engine shape (default: log; supported: atom, log, stream, value)
 --stop-when <last_reader|explicit>   ProducerStop policy (default: last_reader)
 --script <FILE>                      producer script (see below)
 ```
@@ -76,17 +77,27 @@ received response is echoed as an OOB JSONL transcript line on **stderr**
 (jsoncodec form, one object per line).
 
 ```
+--shape <NAME>        engine shape (default: log; supported: atom, log, stream, value)
 --stream-id <S>       stream id to read as (default: s1)
 --from <SEQ>          starting cursor seq (default: 0 = START)
 --max-records <N>     max_records per read request (default: unset)
+--value-id <ID>       value register id (value only; default: value-A)
+--reads <N>           immediate value reads to issue (value only; default: 1)
+--atom-id <ID>        atom id (atom only; default: atom-A)
+--extra-stream-id <S> add an atom reader (repeatable)
+--timeout-ms <MS>     atom timeout/probe policy
 ```
+
+Shape selection is exact. An unsupported name exits 2 with
+`TAUT_SHAPE_UNSUPPORTED_SHAPE` before either mode reads or writes the data
+channel.
 
 Self-pair over crossed pipes (client stdout → node stdin, node stdout → client
 stdin), driven by a producer script:
 
 ```sh
-node --experimental-strip-types src/cli.ts client --stream-id s1 --from 0 \
-  | node --experimental-strip-types src/cli.ts node --script prod.json \
+node --experimental-strip-types src/cli.ts client --shape log --stream-id s1 --from 0 \
+  | node --experimental-strip-types src/cli.ts node --shape log --script prod.json \
   | …   # (crossed — see tests/cli.test.ts for the concurrent-drain harness)
 ```
 
@@ -133,18 +144,16 @@ releases it), timers are messages (`set_timer`/`cancel_timer` out,
 ## Develop
 
 ```sh
-npm run typecheck   # tsc --noEmit  (strict, NodeNext, ES2022)
-npm test            # node --experimental-strip-types --test tests/*.test.ts
+pnpm install --frozen-lockfile
+pnpm run typecheck   # repository-pinned tsc --noEmit (strict, NodeNext, ES2022)
+pnpm test            # node --experimental-strip-types --test tests/*.test.ts
 ```
 
 ### Runner note (deviation from the plan)
 
-The plan pins **vitest** + **tsup**. In the current offline sandbox `npm install`
-cannot reach the registry (and the local cache is incomplete), so the harness
-falls back to the plan's stated fallback: **`node:test` + native
-`--experimental-strip-types`, zero external dependencies** (Node ≥ 22). The
-oracle assertions are exact-equality either way; the engine and oracle loader are
-runner-agnostic, so switching back to vitest is a test-harness swap
-(`import { test } from "vitest"`) once a registry/cache is available. `tsc` is run
-from a local `typescript` install; `tsup` (build) is deferred with the same
-rationale.
+The plan pins **vitest** + **tsup**, while the current harness uses the permitted
+fallback: **`node:test` + native `--experimental-strip-types`** (Node ≥ 22).
+The oracle assertions are exact-equality either way; the engine and oracle loader
+are runner-agnostic. Type checking uses the exact local `typescript` version in
+`package.json`/`pnpm-lock.yaml`; no ambient `tsc` is required. `tsup` remains
+deferred until a build artifact is needed.

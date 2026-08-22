@@ -93,8 +93,8 @@ test("self-pair: push/push/seal releases the held read, client reaches eof", asy
   ];
   const { clientExit, nodeExit, transcript } = await selfPair(
     script,
-    ["--stop-when", "last_reader"],
-    ["--stream-id", "s1", "--from", "0", "--max-records", "10"],
+    ["--shape", "log", "--stop-when", "last_reader"],
+    ["--shape", "log", "--stream-id", "s1", "--from", "0", "--max-records", "10"],
   );
 
   assert.equal(clientExit, 0, "client exits 0");

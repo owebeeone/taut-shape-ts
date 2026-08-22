@@ -249,73 +249,76 @@
   },
   "enums": [
     {
-      "name": "LogMsgType",
+      "name": "CrdtMsgType",
       "members": {
-        "push": 0,
-        "seal": 1,
-        "close": 2,
-        "read": 3,
-        "end_stream": 4,
-        "timer_expired": 5,
-        "evict": 6,
-        "read_response": 7,
-        "set_timer": 8,
-        "cancel_timer": 9,
-        "producer_stop": 10,
-        "diagnostic": 11
+        "apply": 0,
+        "install_bootstrap": 1,
+        "seal": 2,
+        "close": 3,
+        "read": 4,
+        "read_response": 5,
+        "diagnostic": 6
       }
     },
     {
-      "name": "LogState",
+      "name": "CrdtState",
       "members": {
         "data": 0,
-        "would_block": 1,
+        "empty": 1,
         "eof": 2,
         "closed": 3,
         "failed": 4,
-        "expired": 5
+        "bootstrap_required": 5,
+        "invalid_cursor": 6
       }
     },
     {
-      "name": "LogErrorCode",
+      "name": "CrdtErrorCode",
       "members": {
-        "unknown_log": 0,
+        "unknown_crdt": 0,
         "producer_error": 1,
         "internal": 2
       }
     },
     {
-      "name": "LogStopReason",
-      "members": {
-        "last_reader_gone": 0,
-        "closed": 1,
-        "failed": 2
-      }
-    },
-    {
-      "name": "LogSeverity",
+      "name": "CrdtSeverity",
       "members": {
         "warn": 0,
         "error": 1
       }
     },
     {
-      "name": "LogDiagCode",
+      "name": "CrdtDiagCode",
       "members": {
-        "push_after_terminal": 0
+        "apply_after_terminal": 0,
+        "invalid_operation": 1,
+        "equivocation": 2,
+        "bootstrap_conflict": 3,
+        "pending_bound_exceeded": 4
       }
     }
   ],
   "messages": [
     {
-      "name": "LogCursor",
+      "name": "CrdtClockEntry",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "seq",
+          "name": "origin",
           "tag": 1,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "seq",
+          "tag": 2,
           "type": {
             "k": "scalar",
             "scalar": "int"
@@ -327,14 +330,47 @@
       ]
     },
     {
-      "name": "LogRecord",
+      "name": "CrdtClock",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "seq",
+          "name": "entries",
           "tag": 1,
+          "type": {
+            "k": "list",
+            "elem": {
+              "k": "msg",
+              "name": "CrdtClockEntry"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "CrdtOp",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "origin",
+          "tag": 1,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "seq",
+          "tag": 2,
           "type": {
             "k": "scalar",
             "scalar": "int"
@@ -344,7 +380,48 @@
           "merge": null
         },
         {
+          "name": "deps",
+          "tag": 3,
+          "type": {
+            "k": "msg",
+            "name": "CrdtClock"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
           "name": "payload",
+          "tag": 4,
+          "type": {
+            "k": "scalar",
+            "scalar": "bytes"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "CrdtBootstrap",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "clock",
+          "tag": 1,
+          "type": {
+            "k": "msg",
+            "name": "CrdtClock"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "state",
           "tag": 2,
           "type": {
             "k": "scalar",
@@ -357,7 +434,7 @@
       ]
     },
     {
-      "name": "LogError",
+      "name": "CrdtError",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -367,7 +444,7 @@
           "tag": 1,
           "type": {
             "k": "enum",
-            "name": "LogErrorCode"
+            "name": "CrdtErrorCode"
           },
           "optional": false,
           "transient": false,
@@ -387,17 +464,17 @@
       ]
     },
     {
-      "name": "LogPush",
+      "name": "CrdtApply",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "payload",
+          "name": "op",
           "tag": 1,
           "type": {
-            "k": "scalar",
-            "scalar": "bytes"
+            "k": "msg",
+            "name": "CrdtOp"
           },
           "optional": false,
           "transient": false,
@@ -406,14 +483,33 @@
       ]
     },
     {
-      "name": "LogSeal",
+      "name": "CrdtInstallBootstrap",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "bootstrap",
+          "tag": 1,
+          "type": {
+            "k": "msg",
+            "name": "CrdtBootstrap"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "CrdtSeal",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": []
     },
     {
-      "name": "LogClose",
+      "name": "CrdtClose",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -423,7 +519,7 @@
           "tag": 1,
           "type": {
             "k": "msg",
-            "name": "LogError"
+            "name": "CrdtError"
           },
           "optional": true,
           "transient": false,
@@ -432,13 +528,13 @@
       ]
     },
     {
-      "name": "LogReadRequest",
+      "name": "CrdtReadRequest",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "log_id",
+          "name": "crdt_id",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -464,40 +560,7 @@
           "tag": 3,
           "type": {
             "k": "msg",
-            "name": "LogCursor"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "max_records",
-          "tag": 4,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "max_bytes",
-          "tag": 5,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "timeout_ms",
-          "tag": 6,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
+            "name": "CrdtClock"
           },
           "optional": true,
           "transient": false,
@@ -506,81 +569,13 @@
       ]
     },
     {
-      "name": "LogEndStream",
+      "name": "CrdtReadResponse",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "log_id",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "stream_id",
-          "tag": 2,
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogTimerExpired",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "token",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogEvict",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "up_to_seq",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogReadResponse",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "log_id",
+          "name": "crdt_id",
           "tag": 1,
           "type": {
             "k": "scalar",
@@ -602,13 +597,24 @@
           "merge": null
         },
         {
-          "name": "records",
+          "name": "bootstrap",
           "tag": 3,
+          "type": {
+            "k": "msg",
+            "name": "CrdtBootstrap"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "ops",
+          "tag": 4,
           "type": {
             "k": "list",
             "elem": {
               "k": "msg",
-              "name": "LogRecord"
+              "name": "CrdtOp"
             }
           },
           "optional": false,
@@ -617,10 +623,10 @@
         },
         {
           "name": "next_cursor",
-          "tag": 4,
+          "tag": 5,
           "type": {
             "k": "msg",
-            "name": "LogCursor"
+            "name": "CrdtClock"
           },
           "optional": false,
           "transient": false,
@@ -628,10 +634,10 @@
         },
         {
           "name": "state",
-          "tag": 5,
+          "tag": 6,
           "type": {
             "k": "enum",
-            "name": "LogState"
+            "name": "CrdtState"
           },
           "optional": false,
           "transient": false,
@@ -639,10 +645,10 @@
         },
         {
           "name": "error",
-          "tag": 6,
+          "tag": 7,
           "type": {
             "k": "msg",
-            "name": "LogError"
+            "name": "CrdtError"
           },
           "optional": true,
           "transient": false,
@@ -651,75 +657,7 @@
       ]
     },
     {
-      "name": "LogSetTimer",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "token",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "ms",
-          "tag": 2,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogCancelTimer",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "token",
-          "tag": 1,
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogProducerStop",
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "reason",
-          "tag": 1,
-          "type": {
-            "k": "enum",
-            "name": "LogStopReason"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "LogDiagnostic",
+      "name": "CrdtDiagnostic",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
@@ -729,7 +667,7 @@
           "tag": 1,
           "type": {
             "k": "enum",
-            "name": "LogSeverity"
+            "name": "CrdtSeverity"
           },
           "optional": false,
           "transient": false,
@@ -740,9 +678,31 @@
           "tag": 2,
           "type": {
             "k": "enum",
-            "name": "LogDiagCode"
+            "name": "CrdtDiagCode"
           },
           "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "origin",
+          "tag": 3,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "seq",
+          "tag": 4,
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": true,
           "transient": false,
           "merge": null
         }

@@ -8,7 +8,7 @@
 //         4 bytes        1 byte           length-1 bytes
 //
 //   * length — u32-LE byte count of the tag byte PLUS the CBOR body (min 1).
-//   * tag    — the LogMsgType wire value (0..=11) as a single byte.
+//   * tag    — the selected shape's message-type enum value as a single byte.
 //   * body   — the message's deterministic CBOR (vendored codec over the schema).
 //
 // A truncated tail (partial length or body at EOF) is tolerated: read returns a
@@ -18,7 +18,7 @@
 // This module also owns the framing-concern conversions (rs node.rs S4.2): the
 // generated wire structs are `snake_case`, `log_id`/`stream_id`-addressed; the
 // engine's LogInput/LogOutput use idiomatic camelCase §A.1 core types. Native
-// values here follow the vendored codec convention (ints = JS numbers, bytes =
+// values here follow the vendored codec convention (ints = bigint, bytes =
 // Uint8Array, enums = member-name strings, absent optional = null).
 
 import { decode as cborDecode, encode as cborEncode } from "./taut/cbor.ts";
@@ -47,13 +47,6 @@ const TYPE_TO_MSG: Record<string, string> = {
   diagnostic: "LogDiagnostic",
 };
 
-/** LogMsgType member-name -> its 1-byte wire tag (0..=11), from the IR enum. */
-const TAG: Record<string, number> = SCHEMA.enumDef("LogMsgType").members;
-/** Inverse: tag byte -> member-name string. */
-const TAG_INV: Record<number, string> = Object.fromEntries(
-  Object.entries(TAG).map(([k, v]) => [v, k]),
-);
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Native = any;
 
@@ -63,9 +56,77 @@ export interface Frame {
   readonly native: Native; // the codec-decoded wire struct
 }
 
+/** An encoded message before its frame header and CBOR bytes are written. */
+export interface FrameMessage {
+  readonly type: string;
+  readonly native: Native;
+}
+
+/** A selected shape's schema, message names, and one-byte tag registry. */
+export class MessageFrameCodec {
+  readonly schema: SchemaIndex;
+  readonly typeToMessage: Readonly<Record<string, string>>;
+  private readonly tag: Readonly<Record<string, number>>;
+  private readonly tagInverse: Readonly<Record<number, string>>;
+
+  constructor(
+    schema: SchemaIndex,
+    messageTypeEnum: string,
+    typeToMessage: Readonly<Record<string, string>>,
+  ) {
+    this.schema = schema;
+    this.typeToMessage = typeToMessage;
+    this.tag = schema.enumDef(messageTypeEnum).members;
+    this.tagInverse = Object.fromEntries(
+      Object.entries(this.tag).map(([name, value]) => [value, name]),
+    );
+  }
+
+  decode(tag: number, body: Uint8Array): Frame {
+    const type = this.tagInverse[tag];
+    if (type === undefined) throw new UnknownMessageTagError(tag);
+    const message = this.typeToMessage[type];
+    if (message === undefined) throw new UnknownMessageTagError(tag);
+    try {
+      return { type, native: codec.decode(this.schema, message, body) };
+    } catch (error) {
+      throw new FrameError(`malformed frame body: ${(error as Error).message}`);
+    }
+  }
+
+  encode(type: string, native: Native): { readonly tag: number; readonly body: Uint8Array } {
+    const tag = this.tag[type];
+    const message = this.typeToMessage[type];
+    if (tag === undefined || message === undefined) {
+      throw new FrameError(`unknown message type ${type}`);
+    }
+    return { tag, body: codec.encode(this.schema, message, native) };
+  }
+}
+
+export const LOG_FRAME_CODEC = new MessageFrameCodec(SCHEMA, "LogMsgType", TYPE_TO_MSG);
+
 /** A malformed frame (unknown tag or undecodable body). Distinguished from a
  *  clean EOF so the caller can map it to exit 3 while EOF is exit 0. */
-export class FrameError extends Error {}
+export class FrameError extends Error {
+  readonly code: string;
+
+  constructor(message: string, code = "TAUT_SHAPE_MALFORMED_MESSAGE") {
+    super(message);
+    this.name = "FrameError";
+    this.code = code;
+  }
+}
+
+export class UnknownMessageTagError extends FrameError {
+  readonly tag: number;
+
+  constructor(tag: number) {
+    super(`unknown frame tag byte ${tag}`, "TAUT_SHAPE_UNKNOWN_TAG");
+    this.name = "UnknownMessageTagError";
+    this.tag = tag;
+  }
+}
 
 // ── frame read/write over byte streams ───────────────────────────────────────
 
@@ -73,6 +134,11 @@ export class FrameError extends Error {}
  *  arrive split across chunks, so we buffer and yield whole frames only. */
 export class FrameDecoder {
   private buf: Uint8Array = new Uint8Array(0);
+  private readonly frameCodec: MessageFrameCodec;
+
+  constructor(frameCodec: MessageFrameCodec = LOG_FRAME_CODEC) {
+    this.frameCodec = frameCodec;
+  }
 
   /** Append a chunk. Returns the frames now fully available, in order. Throws
    *  FrameError on an unknown tag / undecodable body (caller => exit 3). */
@@ -91,15 +157,7 @@ export class FrameDecoder {
       if (this.buf.length < total) break; // body not fully arrived yet
       const tagByte = this.buf[4]!;
       const body = this.buf.subarray(5, total);
-      const typeName = TAG_INV[tagByte];
-      if (typeName === undefined) throw new FrameError(`unknown frame tag byte ${tagByte}`);
-      let native: Native;
-      try {
-        native = codec.decode(SCHEMA, TYPE_TO_MSG[typeName]!, body);
-      } catch (e) {
-        throw new FrameError(`malformed frame body: ${(e as Error).message}`);
-      }
-      out.push({ type: typeName, native });
+      out.push(this.frameCodec.decode(tagByte, body));
       this.buf = this.buf.subarray(total);
     }
     return out;
@@ -113,15 +171,19 @@ export class FrameDecoder {
 }
 
 /** Encode one wire message (type + native body) into a full frame's bytes. */
-export function encodeFrame(type: string, native: Native): Uint8Array {
-  const body = codec.encode(SCHEMA, TYPE_TO_MSG[type]!, native);
+export function encodeFrame(
+  type: string,
+  native: Native,
+  frameCodec: MessageFrameCodec = LOG_FRAME_CODEC,
+): Uint8Array {
+  const { tag, body } = frameCodec.encode(type, native);
   const frame = new Uint8Array(4 + 1 + body.length);
   const len = body.length + 1; // tag byte + body
   frame[0] = len & 0xff;
   frame[1] = (len >>> 8) & 0xff;
   frame[2] = (len >>> 16) & 0xff;
   frame[3] = (len >>> 24) & 0xff;
-  frame[4] = TAG[type]!;
+  frame[4] = tag;
   frame.set(body, 5);
   return frame;
 }
@@ -201,7 +263,7 @@ export function frameToInput(frame: Frame): LogInput {
 
 /** Engine LogOutput -> `{ type, native }`. `logId` is re-attached to responses
  *  from the per-stream echo map (D3). */
-export function outputToFrameMsg(out: LogOutput, logId: string): { type: string; native: Native } {
+export function outputToFrameMsg(out: LogOutput, logId: string): FrameMessage {
   switch (out.type) {
     case "read_response":
       return {

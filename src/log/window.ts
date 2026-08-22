@@ -31,7 +31,15 @@ export interface ScanResult {
 export class Window {
   // Records ordered by ascending seq. Array is fine: single-origin, append at
   // the back, evict from the front.
+  //
+  // 56-F5: eviction does NOT physically shift the array on every call
+  // (`Array.shift()` is O(N), making N incremental evictions O(N^2)). Instead
+  // `_start` is a logical index of the first retained record within
+  // `records`; `evict` only advances `_start`, and the dead prefix is
+  // reclaimed by an occasional compaction (amortized O(1) per evicted
+  // record) once it reaches half the backing array.
   private records: LogRecord[] = [];
+  private _start = 0; // logical index of the first retained record
   private _head = 0; // highest assigned seq; 0 when empty (D8)
   private _floor = 0; // lowest retained seq; 0 when nothing evicted
   private _lifecycle: Lifecycle = { kind: "live" };
@@ -76,13 +84,24 @@ export class Window {
   /** Records with seq > from, ascending, bounded by `limits` with the D10
    *  forward-progress guarantee (≥1 record whenever any is available, even if it
    *  alone exceeds maxBytes). maxBytes counts RAW PAYLOAD BYTES ONLY. Assumes the
-   *  caller has classified `from` as valid-for-data. */
+   *  caller has classified `from` as valid-for-data.
+   *
+   *  56-F5: `records[_start + i].seq === front.seq + i` (dense-sequence
+   *  invariant: `push` only appends the next seq, `evict` only advances
+   *  `_start`), so the first candidate index is computed directly from the
+   *  front record's seq instead of scanning from the front and skipping
+   *  already-consumed records. A read is O(K) for K returned records rather
+   *  than O(N) in the retained window size. */
   scan(from: number, limits: Limits): ScanResult {
     const out: LogRecord[] = [];
     let last = from;
     let bytes = 0;
-    for (const rec of this.records) {
-      if (rec.seq <= from) continue;
+    const n = this.records.length;
+    if (this._start >= n) return { records: out, last };
+    const frontSeq = this.records[this._start]!.seq;
+    const startIdx = this._start + (from >= frontSeq ? from - frontSeq + 1 : 0);
+    for (let i = startIdx; i < n; i++) {
+      const rec = this.records[i]!;
       if (limits.maxRecords !== undefined && out.length >= limits.maxRecords) break;
       if (limits.maxBytes !== undefined) {
         const nextBytes = bytes + rec.payload.length;
@@ -98,14 +117,25 @@ export class Window {
   /** Drop records with seq <= upToSeq, raising the floor (D7). The floor becomes
    *  the lowest seq still retained (so floor - 1 is the last evicted seq — the
    *  D9 earliest-resumable position). Clamped so eviction never claims to drop
-   *  beyond head. Floor only ever rises. */
+   *  beyond head. Floor only ever rises.
+   *
+   *  56-F5: advances the logical `_start` index instead of repeated
+   *  `Array.shift()` (which is O(N) per call, making N incremental evictions
+   *  O(N^2)). The dead prefix `[0, _start)` is reclaimed by `splice` only once
+   *  it reaches half the backing array, so the amortized cost per evicted
+   *  record stays O(1). */
   evict(upToSeq: number): void {
     if (upToSeq === 0) return;
-    while (this.records.length > 0 && this.records[0]!.seq <= upToSeq) {
-      this.records.shift();
-    }
+    const n = this.records.length;
+    let i = this._start;
+    while (i < n && this.records[i]!.seq <= upToSeq) i++;
+    this._start = i;
     const evictedThrough = Math.min(upToSeq, this._head);
     const newFloor = evictedThrough + 1;
     if (newFloor > this._floor) this._floor = newFloor;
+    if (this._start > 0 && this._start * 2 >= this.records.length) {
+      this.records.splice(0, this._start);
+      this._start = 0;
+    }
   }
 }

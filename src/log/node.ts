@@ -114,13 +114,10 @@ export class LogNode {
 
     // D5 supersede: a new Read on a stream with a held read drops the old one
     // unanswered and cancels its timer.
+    this.sessions.getOrCreate(streamId);
     {
-      const entry = this.sessions.getOrCreate(streamId);
-      if (entry.held !== undefined) {
-        const prev = entry.held;
-        entry.held = undefined;
-        if (prev.timer !== undefined) out.push({ type: "cancel_timer", token: prev.timer });
-      }
+      const prev = this.sessions.clearHeld(streamId);
+      if (prev?.timer !== undefined) out.push({ type: "cancel_timer", token: prev.timer });
     }
 
     const res = this.classify(cursor);
@@ -166,13 +163,11 @@ export class LogNode {
           });
         } else if (timeoutMs === undefined) {
           // Hold indefinitely.
-          const entry = this.sessions.get(streamId)!;
-          entry.held = { cursor, limits };
+          this.sessions.setHeld(streamId, { cursor, limits });
         } else {
           // Hold + set_timer.
           const token = this.allocTimer();
-          const entry = this.sessions.get(streamId)!;
-          entry.held = { cursor, limits, timer: token };
+          this.sessions.setHeld(streamId, { cursor, limits, timer: token });
           out.push({ type: "set_timer", token, ms: timeoutMs });
         }
         break;
@@ -285,19 +280,11 @@ export class LogNode {
 
   private onTimerExpired(token: number): LogOutput[] {
     // Find the held read waiting on this token; answer it would_block.
-    // Unknown/canceled token = no-op.
-    let target: string | undefined;
-    for (const id of this.sessions.heldInCreationOrder()) {
-      const held = this.sessions.get(id)?.held;
-      if (held?.timer === token) {
-        target = id;
-        break;
-      }
-    }
+    // Unknown/canceled token = no-op. 56-F6: O(1) index lookup instead of
+    // scanning held reads for a matching token.
+    const target = this.sessions.findByTimer(token);
     if (target === undefined) return [];
-    const entry = this.sessions.get(target)!;
-    const held = entry.held!;
-    entry.held = undefined;
+    const held = this.sessions.clearHeld(target)!;
     return [
       {
         type: "read_response",
@@ -316,18 +303,20 @@ export class LogNode {
    *  caught-up + live is re-parked, untouched. */
   private releaseHeld(): LogOutput[] {
     const out: LogOutput[] = [];
+    const released: string[] = [];
+    // 56-F6: heldInCreationOrder() is O(H), not O(S). Do not splice the
+    // sorted held-rank array inside this loop: clear the answerable subset in
+    // one linear batch afterwards.
     for (const id of this.sessions.heldInCreationOrder()) {
-      const entry = this.sessions.get(id)!;
-      const held = entry.held!;
-      entry.held = undefined;
+      const held = this.sessions.get(id)!.held!;
       const resp = this.resolveHeld(id, held, out);
       if (resp !== undefined) {
         out.push(resp);
-      } else {
-        // Still cannot answer (caught up + live): re-park it.
-        entry.held = held;
+        released.push(id);
       }
+      // Still caught up + live: leave the existing parked entry untouched.
     }
+    this.sessions.clearHeldMany(released);
     return out;
   }
 
