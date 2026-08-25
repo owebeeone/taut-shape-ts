@@ -4,6 +4,18 @@
   "description": "Pure-TypeScript implementation of Taut delivery shapes (log first) — a mailbox-engine LogNode kept honest by the cross-language behavioral oracle.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/owebeeone/taut-shape-ts.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "taut-shape-tool": "./src/cli.ts"
   },
