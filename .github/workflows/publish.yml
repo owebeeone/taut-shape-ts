@@ -57,4 +57,11 @@ jobs:
       - name: Require tag/package version agreement
         run: |
           node -e 'const p=require("./package.json"); const t=process.env.GITHUB_REF_NAME.replace(/^v/, ""); if (p.version !== t) throw new Error(`package ${p.version} != tag ${t}`)'
-      - run: npm publish --access public
+      - name: Publish if this immutable version is absent
+        run: |
+          package_spec=$(node -p "const p=require('./package.json'); p.name + '@' + p.version")
+          if npm view "$package_spec" version >/dev/null 2>&1; then
+            echo "$package_spec is already published"
+          else
+            npm publish --access public
+          fi
