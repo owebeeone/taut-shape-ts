@@ -23,6 +23,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm build
+      - name: Smoke-test packed consumer install
+        run: |
+          package_dir=$(mktemp -d)
+          npm pack --pack-destination "$package_dir"
+          package_tarball="owebeeone-taut-shape-$(node -p "require('./package.json').version").tgz"
+          npm install --prefix "$package_dir/consumer" "$package_dir/$package_tarball"
+          cd "$package_dir/consumer"
+          node --input-type=module -e "const m = await import('@owebeeone/taut-shape'); if (!m.LogNode || !m.AtomNode || !m.StreamNode || !m.SwmrNode || !m.CrdtNode || !m.ValueNode) throw new Error('missing public shape export')"
 
   publish:
     name: Publish to npm
@@ -49,8 +58,3 @@ jobs:
         run: |
           node -e 'const p=require("./package.json"); const t=process.env.GITHUB_REF_NAME.replace(/^v/, ""); if (p.version !== t) throw new Error(`package ${p.version} != tag ${t}`)'
       - run: npm publish --access public
-        env:
-          # A token is needed only to bootstrap the package. Once the package
-          # exists, configure npm Trusted Publishing for publish.yml and remove
-          # this secret; npm will use the job's OIDC token automatically.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
