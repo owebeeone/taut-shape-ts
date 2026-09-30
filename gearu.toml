@@ -1,0 +1,33 @@
+# taut-shape-ts's releases (RELEASE.md). gearu verifies the tree, raises the version, commits and
+# tags it, and pushes both, and the GitHub Release it creates starts
+# .github/workflows/publish.yml, which publishes @owebeeone/taut-shape to npm.
+[project]
+name = "taut-shape-ts"
+branch = "main"
+remote = "origin"
+tag_prefix = "v"
+github_repo = "owebeeone/taut-shape-ts"
+
+[npm]
+manifest = "package.json"
+lockfile = "pnpm-lock.yaml"
+lock_command = ["pnpm", "install", "--lockfile-only"]
+
+[release]
+# The package's own checks, then a pack: prepack builds dist/, and the tarball lands there too.
+# Git ignores dist/.
+checks = [
+    # The package reads the contract's corpus from a sibling taut-shape checkout, as CI does, which
+    # checks the contract's main out beside it: link gearu's candidate to this checkout's sibling.
+    ["ln", "-sfn", "{repo}/../taut-shape", "../taut-shape"],
+    ["pnpm", "install", "--frozen-lockfile"],
+    ["pnpm", "typecheck"],
+    ["pnpm", "test"],
+    ["pnpm", "pack", "--pack-destination", "dist"],
+]
+exact_checks = [
+    ["pnpm", "install", "--frozen-lockfile"],
+    ["pnpm", "pack", "--pack-destination", "dist"],
+]
+commit_message = "Release taut-shape-ts {version}"
+github_notes = "Taut shape package for TypeScript, {tag}. Publishing this release triggers the npm workflow."
