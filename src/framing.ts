@@ -7,13 +7,16 @@
 //   └────────────────┴──────────┴───────────────────────────┘
 //         4 bytes        1 byte           length-1 bytes
 //
-//   * length — u32-LE byte count of the tag byte PLUS the CBOR body (min 1).
+//   * length — u32-LE byte count of the tag byte PLUS the CBOR body (min 1,
+//              max MAX_FRAME_BYTES, 16 MiB), read unsigned.
 //   * tag    — the selected shape's message-type enum value as a single byte.
 //   * body   — the message's deterministic CBOR (vendored codec over the schema).
 //
 // A truncated tail (partial length or body at EOF) is tolerated: read returns a
-// clean EOF, so a peer that dies mid-frame drains rather than errors. An unknown
-// tag or undecodable body is a protocol error (the CLI maps it to exit 3).
+// clean EOF, so a peer that dies mid-frame drains rather than errors. A length out
+// of range (refused from its four bytes, before the body is read), an unknown tag
+// or a body the codec refuses with a DecodeError is a protocol error (the CLI maps
+// it to exit 3). Any other throw from decoding is a bug here and propagates.
 //
 // This module also owns the framing-concern conversions (rs node.rs S4.2): the
 // generated wire structs are `snake_case`, `log_id`/`stream_id`-addressed; the
@@ -21,7 +24,7 @@
 // values here follow the vendored codec convention (ints = bigint, bytes =
 // Uint8Array, enums = member-name strings, absent optional = null).
 
-import { decode as cborDecode, encode as cborEncode } from "./taut/cbor.ts";
+import { DecodeError, decode as cborDecode, encode as cborEncode } from "./taut/cbor.ts";
 import * as codec from "./taut/codec.ts";
 import { loadSchema, type SchemaIndex } from "./taut/schema.ts";
 import { fromJsonValue, toJsonValue } from "./taut/jsoncodec.ts";
@@ -29,6 +32,10 @@ import irJson from "./taut/gen/shape_log.ir.json" with { type: "json" };
 import type { Cursor, LogError, LogInput, LogOutput } from "./log/messages.ts";
 
 export const SCHEMA: SchemaIndex = loadSchema(irJson);
+
+/** The largest frame length read: the tag byte plus the body, 16 MiB. A frame that
+ *  claims more is refused from its four length bytes, before its body is read. */
+export const MAX_FRAME_BYTES = 16 * 1024 * 1024;
 
 /** `type` tag string (== LogMsgType member) -> schema message name (rs uses the
  *  generated struct directly; here the codec is name-driven). */
@@ -82,15 +89,25 @@ export class MessageFrameCodec {
     );
   }
 
+  /** Decode one frame's body. The codec throws DecodeError for any bytes it refuses
+   *  (TautCheckedDecode.md CD-E3, CD-E4), which is a malformed frame; anything else it
+   *  throws is a bug, not the input's fault, and propagates. */
   decode(tag: number, body: Uint8Array): Frame {
     const type = this.tagInverse[tag];
-    if (type === undefined) throw new UnknownMessageTagError(tag);
+    if (type === undefined) {
+      throw new UnknownMessageTagError(tag);
+    }
     const message = this.typeToMessage[type];
-    if (message === undefined) throw new UnknownMessageTagError(tag);
+    if (message === undefined) {
+      throw new UnknownMessageTagError(tag);
+    }
     try {
       return { type, native: codec.decode(this.schema, message, body) };
     } catch (error) {
-      throw new FrameError(`malformed frame body: ${(error as Error).message}`);
+      if (error instanceof DecodeError) {
+        throw new FrameError(`malformed frame body: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -141,7 +158,9 @@ export class FrameDecoder {
   }
 
   /** Append a chunk. Returns the frames now fully available, in order. Throws
-   *  FrameError on an unknown tag / undecodable body (caller => exit 3). */
+   *  FrameError on a length out of range, an unknown tag or an undecodable body
+   *  (caller => exit 3). A length is checked as soon as its four bytes arrive, so a
+   *  frame claiming more than MAX_FRAME_BYTES is refused before its body is read. */
   push(chunk: Uint8Array): Frame[] {
     const merged = new Uint8Array(this.buf.length + chunk.length);
     merged.set(this.buf, 0);
@@ -149,12 +168,22 @@ export class FrameDecoder {
     this.buf = merged;
     const out: Frame[] = [];
     for (;;) {
-      if (this.buf.length < 4) break; // incomplete length prefix
+      if (this.buf.length < 4) {
+        break; // incomplete length prefix
+      }
+      // `>>> 0` reads the u32 unsigned: `<< 24` alone makes a length of 2^31 or more negative.
       const len =
-        this.buf[0]! | (this.buf[1]! << 8) | (this.buf[2]! << 16) | (this.buf[3]! << 24);
+        (this.buf[0]! | (this.buf[1]! << 8) | (this.buf[2]! << 16) | (this.buf[3]! << 24)) >>> 0;
+      if (len < 1) {
+        throw new FrameError(`bad frame length ${len} (min 1 for the tag byte)`);
+      }
+      if (len > MAX_FRAME_BYTES) {
+        throw new FrameError(`bad frame length ${len} (max MAX_FRAME_BYTES = ${MAX_FRAME_BYTES})`);
+      }
       const total = 4 + len;
-      if (len < 1) throw new FrameError(`bad frame length ${len} (min 1 for the tag byte)`);
-      if (this.buf.length < total) break; // body not fully arrived yet
+      if (this.buf.length < total) {
+        break; // body not fully arrived yet
+      }
       const tagByte = this.buf[4]!;
       const body = this.buf.subarray(5, total);
       out.push(this.frameCodec.decode(tagByte, body));

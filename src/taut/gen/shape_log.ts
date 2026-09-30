@@ -15,11 +15,11 @@ export type LogSeverity = "warn" | "error";
 export type LogDiagCode = "push_after_terminal";
 
 export interface LogCursor {
-  seq: number;
+  seq: bigint;
 }
 
 export interface LogRecord {
-  seq: number;
+  seq: bigint;
   payload: Uint8Array;
 }
 
@@ -43,9 +43,9 @@ export interface LogReadRequest {
   log_id: string;
   stream_id: string;
   cursor: LogCursor | null;
-  max_records: number | null;
-  max_bytes: number | null;
-  timeout_ms: number | null;
+  max_records: bigint | null;
+  max_bytes: bigint | null;
+  timeout_ms: bigint | null;
 }
 
 export interface LogEndStream {
@@ -54,11 +54,11 @@ export interface LogEndStream {
 }
 
 export interface LogTimerExpired {
-  token: number;
+  token: bigint;
 }
 
 export interface LogEvict {
-  up_to_seq: number;
+  up_to_seq: bigint;
 }
 
 export interface LogReadResponse {
@@ -71,12 +71,12 @@ export interface LogReadResponse {
 }
 
 export interface LogSetTimer {
-  token: number;
-  ms: number;
+  token: bigint;
+  ms: bigint;
 }
 
 export interface LogCancelTimer {
-  token: number;
+  token: bigint;
 }
 
 export interface LogProducerStop {

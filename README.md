@@ -15,7 +15,8 @@ Governed by the shared plan
 
 Phases 0–2 landed:
 
-- **Phase 0** — skeleton, vendored taut runtime (`src/taut/{cbor,codec,schema}.ts`),
+- **Phase 0** — skeleton, vendored taut runtime (`src/taut/{cbor,codec,schema}.ts`,
+  taut v0.10.0; `tests/parity.test.ts` replays taut's codec-parity rows through it),
   generated message types (`src/taut/gen/shape_log.ts` + `shape_log.ir.json`).
 - **Phase 1** — the `LogNode` engine (`src/node.ts`) over the internal
   `window.ts` (store core) + `session.ts` (session table), with the
@@ -49,7 +50,9 @@ node --experimental-strip-types src/cli.ts <node|client> [options]
 **Data channel** (both modes, stdin↔stdout): each frame is `u32-LE length` +
 `1 tag byte` (the selected shape's message-type enum value) + the message's CBOR body;
 `length` counts the tag byte plus the body. This is exactly the framing the
-`taut-shape-rs` node mode implements — the shared reference.
+`taut-shape-rs` node mode implements — the shared reference. `length` is read unsigned
+and capped at 16 MiB (`MAX_FRAME_BYTES`): a frame claiming more is refused (exit 3)
+before its body is read.
 
 **`node`** — run the selected shape engine behind the framing. Reads input frames on stdin,
 feeds the engine, writes all resulting output frames to stdout in order after

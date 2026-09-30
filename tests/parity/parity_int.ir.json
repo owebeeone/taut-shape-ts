@@ -254,133 +254,21 @@
   },
   "enums": [
     {
-      "name": "SwmrMsgType",
+      "name": "Mode",
       "options": {},
       "members": {
-        "snapshot_push": 0,
-        "delta_push": 1,
-        "reset": 2,
-        "seal": 3,
-        "close": 4,
-        "read": 5,
-        "end_stream": 6,
-        "timer_expired": 7,
-        "read_response": 8,
-        "set_timer": 9,
-        "cancel_timer": 10,
-        "producer_stop": 11,
-        "diagnostic": 12
+        "ok": 0,
+        "alt": 1
       },
       "member_options": {
-        "snapshot_push": {},
-        "delta_push": {},
-        "reset": {},
-        "seal": {},
-        "close": {},
-        "read": {},
-        "end_stream": {},
-        "timer_expired": {},
-        "read_response": {},
-        "set_timer": {},
-        "cancel_timer": {},
-        "producer_stop": {},
-        "diagnostic": {}
-      }
-    },
-    {
-      "name": "SwmrState",
-      "options": {},
-      "members": {
-        "data": 0,
-        "would_block": 1,
-        "eof": 2,
-        "closed": 3,
-        "failed": 4,
-        "reset": 5
-      },
-      "member_options": {
-        "data": {},
-        "would_block": {},
-        "eof": {},
-        "closed": {},
-        "failed": {},
-        "reset": {}
-      }
-    },
-    {
-      "name": "SwmrErrorCode",
-      "options": {},
-      "members": {
-        "unknown_swmr": 0,
-        "producer_error": 1,
-        "internal": 2
-      },
-      "member_options": {
-        "unknown_swmr": {},
-        "producer_error": {},
-        "internal": {}
-      }
-    },
-    {
-      "name": "SwmrStopReason",
-      "options": {},
-      "members": {
-        "last_reader_gone": 0,
-        "closed": 1,
-        "failed": 2
-      },
-      "member_options": {
-        "last_reader_gone": {},
-        "closed": {},
-        "failed": {}
-      }
-    },
-    {
-      "name": "SwmrResetReason",
-      "options": {},
-      "members": {
-        "producer_requested": 0,
-        "retention_exceeded": 1,
-        "invalid_resume_seq": 2
-      },
-      "member_options": {
-        "producer_requested": {},
-        "retention_exceeded": {},
-        "invalid_resume_seq": {}
-      }
-    },
-    {
-      "name": "SwmrSeverity",
-      "options": {},
-      "members": {
-        "warn": 0,
-        "error": 1
-      },
-      "member_options": {
-        "warn": {},
-        "error": {}
-      }
-    },
-    {
-      "name": "SwmrDiagCode",
-      "options": {},
-      "members": {
-        "push_after_terminal": 0,
-        "delta_before_snapshot": 1,
-        "writer_conflict": 2,
-        "retention_bound_exceeded": 3
-      },
-      "member_options": {
-        "push_after_terminal": {},
-        "delta_before_snapshot": {},
-        "writer_conflict": {},
-        "retention_bound_exceeded": {}
+        "ok": {},
+        "alt": {}
       }
     }
   ],
   "messages": [
     {
-      "name": "SwmrCursor",
+      "name": "IntBox",
       "options": {},
       "effective": {
         "max_depth": 32,
@@ -388,10 +276,10 @@
       },
       "reserved_tags": [],
       "reserved_names": [],
-      "next_id": null,
+      "next_id": 3,
       "fields": [
         {
-          "name": "seq",
+          "name": "n",
           "tag": 1,
           "options": {},
           "type": {
@@ -403,12 +291,19 @@
           "merge": null
         },
         {
-          "name": "epoch",
+          "name": "by_id",
           "tag": 2,
           "options": {},
           "type": {
-            "k": "scalar",
-            "scalar": "int"
+            "k": "map",
+            "key": {
+              "k": "scalar",
+              "scalar": "int"
+            },
+            "value": {
+              "k": "scalar",
+              "scalar": "int"
+            }
           },
           "optional": false,
           "transient": false,
@@ -417,7 +312,7 @@
       ]
     },
     {
-      "name": "SwmrSnapshot",
+      "name": "EnumBox",
       "options": {},
       "effective": {
         "max_depth": 32,
@@ -425,109 +320,36 @@
       },
       "reserved_tags": [],
       "reserved_names": [],
-      "next_id": null,
+      "next_id": 2,
       "fields": [
         {
-          "name": "seq",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "payload",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "bytes"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrDelta",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "base_seq",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "seq",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "payload",
-          "tag": 3,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "bytes"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrError",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "code",
+          "name": "mode",
           "tag": 1,
           "options": {},
           "type": {
             "k": "enum",
-            "name": "SwmrErrorCode"
+            "name": "Mode"
           },
           "optional": false,
           "transient": false,
           "merge": null
-        },
+        }
+      ]
+    },
+    {
+      "name": "OptBox",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 3,
+      "fields": [
         {
-          "name": "message",
-          "tag": 2,
+          "name": "note",
+          "tag": 1,
           "options": {},
           "type": {
             "k": "scalar",
@@ -536,348 +358,201 @@
           "optional": true,
           "transient": false,
           "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrSnapshotPush",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "writer_id",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
         },
         {
-          "name": "payload",
+          "name": "tags",
           "tag": 2,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "bytes"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrDeltaPush",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "writer_id",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "payload",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "bytes"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrReset",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "writer_id",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "reason",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "enum",
-            "name": "SwmrResetReason"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "detail",
-          "tag": 3,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "bytes"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrSeal",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": []
-    },
-    {
-      "name": "SwmrClose",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "error",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "msg",
-            "name": "SwmrError"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrReadRequest",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "swmr_id",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "stream_id",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "cursor",
-          "tag": 3,
-          "options": {},
-          "type": {
-            "k": "msg",
-            "name": "SwmrCursor"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "timeout_ms",
-          "tag": 4,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrEndStream",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "swmr_id",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "stream_id",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrTimerExpired",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "token",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrReadResponse",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "swmr_id",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "stream_id",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "snapshot",
-          "tag": 3,
-          "options": {},
-          "type": {
-            "k": "msg",
-            "name": "SwmrSnapshot"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "deltas",
-          "tag": 4,
           "options": {},
           "type": {
             "k": "list",
             "elem": {
-              "k": "msg",
-              "name": "SwmrDelta"
+              "k": "scalar",
+              "scalar": "str"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "Empty",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 1,
+      "fields": []
+    },
+    {
+      "name": "Late",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 2,
+      "fields": [
+        {
+          "name": "note",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": "missing_ok",
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "Shapes",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 20,
+      "fields": [
+        {
+          "name": "count",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "ratio",
+          "tag": 2,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "float"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "label",
+          "tag": 3,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "blob",
+          "tag": 4,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "bytes"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "flag",
+          "tag": 5,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "bool"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "mode",
+          "tag": 6,
+          "options": {},
+          "type": {
+            "k": "enum",
+            "name": "Mode"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "boxed",
+          "tag": 7,
+          "options": {},
+          "type": {
+            "k": "msg",
+            "name": "EnumBox"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "maybe_count",
+          "tag": 8,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "maybe_mode",
+          "tag": 9,
+          "options": {},
+          "type": {
+            "k": "enum",
+            "name": "Mode"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "maybe_boxed",
+          "tag": 10,
+          "options": {},
+          "type": {
+            "k": "msg",
+            "name": "EnumBox"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "numbers",
+          "tag": 11,
+          "options": {},
+          "type": {
+            "k": "list",
+            "elem": {
+              "k": "scalar",
+              "scalar": "int"
             }
           },
           "optional": false,
@@ -885,69 +560,655 @@
           "merge": null
         },
         {
-          "name": "next_cursor",
-          "tag": 5,
+          "name": "boxes",
+          "tag": 12,
           "options": {},
           "type": {
-            "k": "msg",
-            "name": "SwmrCursor"
-          },
-          "optional": true,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "state",
-          "tag": 6,
-          "options": {},
-          "type": {
-            "k": "enum",
-            "name": "SwmrState"
+            "k": "list",
+            "elem": {
+              "k": "msg",
+              "name": "EnumBox"
+            }
           },
           "optional": false,
           "transient": false,
           "merge": null
         },
         {
-          "name": "reset_reason",
+          "name": "grid",
+          "tag": 13,
+          "options": {},
+          "type": {
+            "k": "list",
+            "elem": {
+              "k": "list",
+              "elem": {
+                "k": "scalar",
+                "scalar": "int"
+              }
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "tally",
+          "tag": 14,
+          "options": {},
+          "type": {
+            "k": "map",
+            "key": {
+              "k": "scalar",
+              "scalar": "str"
+            },
+            "value": {
+              "k": "scalar",
+              "scalar": "int"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "mode_by_flag",
+          "tag": 15,
+          "options": {},
+          "type": {
+            "k": "map",
+            "key": {
+              "k": "scalar",
+              "scalar": "bool"
+            },
+            "value": {
+              "k": "enum",
+              "name": "Mode"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "box_by_id",
+          "tag": 16,
+          "options": {},
+          "type": {
+            "k": "map",
+            "key": {
+              "k": "scalar",
+              "scalar": "int"
+            },
+            "value": {
+              "k": "msg",
+              "name": "EnumBox"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "maybe_numbers",
+          "tag": 17,
+          "options": {},
+          "type": {
+            "k": "list",
+            "elem": {
+              "k": "scalar",
+              "scalar": "int"
+            }
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "maybe_tally",
+          "tag": 18,
+          "options": {},
+          "type": {
+            "k": "map",
+            "key": {
+              "k": "scalar",
+              "scalar": "str"
+            },
+            "value": {
+              "k": "scalar",
+              "scalar": "int"
+            }
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "late_note",
+          "tag": 19,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": "missing_ok",
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "Names",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 31,
+      "fields": [
+        {
+          "name": "m",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "b",
+          "tag": 2,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "c",
+          "tag": 3,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "v",
+          "tag": 4,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "o",
+          "tag": 5,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "f",
+          "tag": 6,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "x",
           "tag": 7,
           "options": {},
           "type": {
-            "k": "enum",
-            "name": "SwmrResetReason"
+            "k": "scalar",
+            "scalar": "int"
           },
-          "optional": true,
+          "optional": false,
           "transient": false,
           "merge": null
         },
         {
-          "name": "error",
+          "name": "e",
           "tag": 8,
           "options": {},
           "type": {
-            "k": "msg",
-            "name": "SwmrError"
+            "k": "list",
+            "elem": {
+              "k": "scalar",
+              "scalar": "int"
+            }
           },
-          "optional": true,
+          "optional": false,
           "transient": false,
           "merge": null
         },
         {
-          "name": "reset_detail",
+          "name": "k",
           "tag": 9,
+          "options": {},
+          "type": {
+            "k": "map",
+            "key": {
+              "k": "scalar",
+              "scalar": "str"
+            },
+            "value": {
+              "k": "scalar",
+              "scalar": "int"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "i",
+          "tag": 10,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "j",
+          "tag": 11,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "a",
+          "tag": 12,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "t",
+          "tag": 13,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "it",
+          "tag": 14,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "kv",
+          "tag": 15,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "fv",
+          "tag": 16,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": "missing_ok",
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "ok",
+          "tag": 17,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "err",
+          "tag": 18,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "arr",
+          "tag": 19,
+          "options": {},
+          "type": {
+            "k": "list",
+            "elem": {
+              "k": "scalar",
+              "scalar": "str"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "ks",
+          "tag": 20,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "kc",
+          "tag": 21,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "vc",
+          "tag": 22,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "ek",
+          "tag": 23,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "ev",
+          "tag": 24,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "key",
+          "tag": 25,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "bool"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "dup",
+          "tag": 26,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "entries",
+          "tag": 27,
+          "options": {},
+          "type": {
+            "k": "map",
+            "key": {
+              "k": "scalar",
+              "scalar": "int"
+            },
+            "value": {
+              "k": "scalar",
+              "scalar": "int"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "encode_value",
+          "tag": 28,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "java",
+          "tag": 29,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "decodeDictionary",
+          "tag": 30,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "Tree64",
+      "options": {
+        "max_depth": 64
+      },
+      "effective": {
+        "max_depth": 64,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 2,
+      "fields": [
+        {
+          "name": "kids",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "list",
+            "elem": {
+              "k": "msg",
+              "name": "Tree64"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "Tree128",
+      "options": {
+        "max_depth": 128
+      },
+      "effective": {
+        "max_depth": 128,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 2,
+      "fields": [
+        {
+          "name": "kids",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "list",
+            "elem": {
+              "k": "msg",
+              "name": "Tree128"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "Flat2",
+      "options": {
+        "max_depth": 2
+      },
+      "effective": {
+        "max_depth": 2,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 2,
+      "fields": [
+        {
+          "name": "v",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "list",
+            "elem": {
+              "k": "scalar",
+              "scalar": "int"
+            }
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "Sized8",
+      "options": {
+        "max_encoded_len": 8
+      },
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": 8
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": 2,
+      "fields": [
+        {
+          "name": "b",
+          "tag": 1,
           "options": {},
           "type": {
             "k": "scalar",
             "scalar": "bytes"
           },
-          "optional": true,
+          "optional": false,
           "transient": false,
           "merge": null
         }
       ]
     },
     {
-      "name": "SwmrSetTimer",
+      "name": "Holds64",
       "options": {},
       "effective": {
         "max_depth": 32,
@@ -955,27 +1216,15 @@
       },
       "reserved_tags": [],
       "reserved_names": [],
-      "next_id": null,
+      "next_id": 2,
       "fields": [
         {
-          "name": "token",
+          "name": "t",
           "tag": 1,
           "options": {},
           "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "ms",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "scalar",
-            "scalar": "int"
+            "k": "msg",
+            "name": "Tree64"
           },
           "optional": false,
           "transient": false,
@@ -984,7 +1233,7 @@
       ]
     },
     {
-      "name": "SwmrCancelTimer",
+      "name": "HoldsSized8",
       "options": {},
       "effective": {
         "max_depth": 32,
@@ -992,77 +1241,15 @@
       },
       "reserved_tags": [],
       "reserved_names": [],
-      "next_id": null,
+      "next_id": 2,
       "fields": [
         {
-          "name": "token",
+          "name": "s",
           "tag": 1,
           "options": {},
           "type": {
-            "k": "scalar",
-            "scalar": "int"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrProducerStop",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "reason",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "enum",
-            "name": "SwmrStopReason"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        }
-      ]
-    },
-    {
-      "name": "SwmrDiagnostic",
-      "options": {},
-      "effective": {
-        "max_depth": 32,
-        "max_encoded_len": null
-      },
-      "reserved_tags": [],
-      "reserved_names": [],
-      "next_id": null,
-      "fields": [
-        {
-          "name": "severity",
-          "tag": 1,
-          "options": {},
-          "type": {
-            "k": "enum",
-            "name": "SwmrSeverity"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "code",
-          "tag": 2,
-          "options": {},
-          "type": {
-            "k": "enum",
-            "name": "SwmrDiagCode"
+            "k": "msg",
+            "name": "Sized8"
           },
           "optional": false,
           "transient": false,

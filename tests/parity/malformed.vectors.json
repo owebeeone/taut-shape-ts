@@ -1,0 +1,395 @@
+{
+  "version": 1,
+  "contract": "taut-codec-parity/i64/v1",
+  "schema_path": "ir/parity_int.taut.py",
+  "vectors": [
+    {
+      "name": "truncated-u64-argument",
+      "stage": "raw_decode",
+      "bytes": "1b0000",
+      "expect": {"tag": "Truncated"},
+      "why": "major-0 says eight argument bytes, only two are present"
+    },
+    {
+      "name": "trailing-byte",
+      "stage": "raw_decode",
+      "bytes": "0000",
+      "expect": {"tag": "TrailingBytes"},
+      "why": "one complete int followed by extra data"
+    },
+    {
+      "name": "invalid-utf8",
+      "stage": "raw_decode",
+      "bytes": "61ff",
+      "expect": {"tag": "InvalidUtf8"},
+      "why": "text string payload is not UTF-8"
+    },
+    {
+      "name": "reserved-additional-info-28",
+      "stage": "raw_decode",
+      "bytes": "1c",
+      "expect": {"tag": "UnsupportedInfo", "info": 28},
+      "why": "additional-info 28 is reserved by CBOR and outside taut's subset"
+    },
+    {
+      "name": "unsupported-major-tag",
+      "stage": "raw_decode",
+      "bytes": "c0",
+      "expect": {"tag": "UnsupportedMajor", "major": 6},
+      "why": "CBOR tags are outside taut's frozen subset"
+    },
+    {
+      "name": "non-integer-map-key",
+      "stage": "raw_decode",
+      "bytes": "a1617800",
+      "expect": {"tag": "NonIntegerMapKey"},
+      "why": "raw CBOR maps must use integer field-tag keys"
+    },
+    {
+      "name": "duplicate-map-key",
+      "stage": "raw_decode",
+      "bytes": "a201000101",
+      "expect": {"tag": "DuplicateMapKey", "key": 1},
+      "why": "same raw CBOR map key appears twice"
+    },
+    {
+      "name": "positive-int-overflow",
+      "stage": "raw_decode",
+      "bytes": "1b8000000000000000",
+      "expect": {"tag": "IntOverflow", "value": "9223372036854775808"},
+      "why": "CBOR major-0 value is just above i64::MAX"
+    },
+    {
+      "name": "negative-int-overflow",
+      "stage": "raw_decode",
+      "bytes": "3b8000000000000000",
+      "expect": {"tag": "IntOverflow", "value": "-9223372036854775809"},
+      "why": "CBOR major-1 value is just below i64::MIN"
+    },
+    {
+      "name": "missing-required-field",
+      "stage": "from_cbor",
+      "schema": "IntBox",
+      "bytes": "a10100",
+      "expect": {"tag": "MissingKey", "key": 2},
+      "why": "IntBox.by_id is required and absent"
+    },
+    {
+      "name": "wrong-type-field",
+      "stage": "from_cbor",
+      "schema": "IntBox",
+      "bytes": "a20161780280",
+      "expect": {"tag": "WrongType", "expected": "int"},
+      "why": "IntBox.n wants int, received text"
+    },
+    {
+      "name": "unknown-enum",
+      "stage": "from_wire",
+      "schema": "Mode",
+      "bytes": "1863",
+      "expect": {"tag": "UnknownEnum", "enum": "Mode", "value": "99"},
+      "why": "Mode has no member with wire value 99"
+    },
+    {
+      "name": "non-canonical-int-2byte",
+      "stage": "raw_decode",
+      "bytes": "190005",
+      "expect": {"tag": "NonCanonicalInt", "value": "5"},
+      "why": "value 5 in a 2-byte argument (0x19 0x0005); canonical is the immediate 0x05 (width 25)",
+      "lead": true
+    },
+    {
+      "name": "non-canonical-int-8byte",
+      "stage": "raw_decode",
+      "bytes": "1b0000000000000005",
+      "expect": {"tag": "NonCanonicalInt", "value": "5"},
+      "why": "value 5 in an 8-byte argument; canonical is the immediate 0x05 (width 27)",
+      "lead": true
+    },
+    {
+      "name": "negative-map-key",
+      "stage": "raw_decode",
+      "bytes": "a12000",
+      "expect": {"tag": "NegativeMapKey", "key": "-1"},
+      "why": "raw CBOR map key -1 (major-1); the canonical encoder only emits non-negative field tags",
+      "lead": true
+    },
+    {
+      "name": "nested-truncated-string",
+      "stage": "raw_decode",
+      "bytes": "a100636162",
+      "expect": {"tag": "Truncated"},
+      "why": "text string nested inside a map claims 3 bytes but only 2 are present",
+      "lead": true
+    },
+    {
+      "name": "bytes-length-over-2^53",
+      "stage": "raw_decode",
+      "bytes": "5b0020000000000000",
+      "expect": {"tag": "Truncated"},
+      "why": "M1: a byte string (major 2) claims 2^53 bytes and none follow; a length beyond the remaining bytes is Truncated whatever its size, not IntOverflow",
+      "lead": true
+    },
+    {
+      "name": "array-count-u64-max",
+      "stage": "raw_decode",
+      "bytes": "9bffffffffffffffff",
+      "expect": {"tag": "Truncated"},
+      "why": "M2: an array claims 2^64-1 items and none follow; the first item's missing head is Truncated, not IntOverflow",
+      "lead": true
+    },
+    {
+      "name": "items-read-in-order",
+      "stage": "raw_decode",
+      "bytes": "85c0",
+      "expect": {"tag": "UnsupportedMajor", "major": 6},
+      "why": "M3: items are read in order, so the first item's tag head (major 6) fails before the four missing items are reached",
+      "lead": true
+    },
+    {
+      "name": "key-first-duplicate",
+      "stage": "raw_decode",
+      "bytes": "a2010001",
+      "expect": {"tag": "DuplicateMapKey", "key": 1},
+      "why": "M4: a map entry's key is checked before its value is read; key 1 repeats and its value is missing",
+      "lead": true
+    },
+    {
+      "name": "key-first-text",
+      "stage": "raw_decode",
+      "bytes": "a16178",
+      "expect": {"tag": "NonIntegerMapKey"},
+      "why": "M5: a map entry's key is checked before its value is read; the key is text and its value is missing",
+      "lead": true
+    },
+    {
+      "name": "key-first-negative",
+      "stage": "raw_decode",
+      "bytes": "a120",
+      "expect": {"tag": "NegativeMapKey", "key": "-1"},
+      "why": "M6: a map entry's key is checked before its value is read; the key is -1 and its value is missing",
+      "lead": true
+    },
+    {
+      "name": "major-6-info-28",
+      "stage": "raw_decode",
+      "bytes": "dc",
+      "expect": {"tag": "UnsupportedMajor", "major": 6},
+      "why": "M7: the major type is checked before the additional info; 0xdc is major 6 with the reserved info 28",
+      "lead": true
+    },
+    {
+      "name": "map-key-2^53",
+      "stage": "raw_decode",
+      "bytes": "a11b002000000000000000",
+      "expect": {"accept": true},
+      "why": "M8: a raw map key of 2^53 is an i64 like any other and decodes; 2^53 is no limit on keys",
+      "lead": true
+    },
+    {
+      "name": "wrong-type-text",
+      "stage": "from_cbor",
+      "schema": "OptBox",
+      "bytes": "a201010280",
+      "expect": {"tag": "WrongType", "expected": "text"},
+      "why": "M9: OptBox.note wants text and holds an int; the payload word is `text` (CD-E6), not `str`",
+      "lead": true
+    },
+    {
+      "name": "wrong-type-array",
+      "stage": "from_cbor",
+      "schema": "OptBox",
+      "bytes": "a201f60200",
+      "expect": {"tag": "WrongType", "expected": "array"},
+      "why": "M10: OptBox.tags wants an array and holds an int; the payload word is `array` (CD-E6), not `list`",
+      "lead": true
+    },
+    {
+      "name": "optional-absent",
+      "stage": "from_cbor",
+      "schema": "OptBox",
+      "bytes": "a10280",
+      "expect": {"tag": "MissingKey", "key": 1},
+      "why": "M11: an absent optional field is MissingKey; the canonical encoder always writes it, as null when unset",
+      "lead": true
+    },
+    {
+      "name": "empty-message-not-map",
+      "stage": "from_cbor",
+      "schema": "Empty",
+      "bytes": "00",
+      "expect": {"tag": "WrongType", "expected": "map"},
+      "why": "M12: a message with no fields must still be a map",
+      "lead": true
+    },
+    {
+      "name": "map-field-duplicate",
+      "stage": "from_cbor",
+      "schema": "IntBox",
+      "bytes": "a201000282a201050201a201050202",
+      "expect": {"tag": "DuplicateMapKey", "key": 5},
+      "why": "M13: two IntBox.by_id entries share the key 5; a map<K,V> refuses a repeated key rather than keeping the last",
+      "lead": true
+    },
+    {
+      "name": "map-entry-keys-first",
+      "stage": "from_cbor",
+      "schema": "IntBox",
+      "bytes": "a201000281a1016178",
+      "expect": {"tag": "MissingKey", "key": 2},
+      "why": "M14: a map<K,V> entry checks for keys 1 and 2 before decoding either; this entry lacks key 2 and its key 1 holds text",
+      "lead": true
+    },
+    {
+      "name": "optional-present-null",
+      "stage": "from_cbor",
+      "schema": "OptBox",
+      "bytes": "a201f60280",
+      "expect": {"accept": true},
+      "why": "M15: an optional field present as null decodes, to null",
+      "lead": true
+    },
+    {
+      "name": "missing-ok-absent",
+      "stage": "from_cbor",
+      "schema": "Late",
+      "bytes": "a0",
+      "expect": {"accept": true, "reencode": "a101f6"},
+      "why": "M16: Late.note is optional=MISSING_OK, so an absent key decodes to null; the encoder writes the null back, the declared exception to D2's law",
+      "lead": true
+    },
+    {
+      "name": "missing-ok-wrong-type",
+      "stage": "from_cbor",
+      "schema": "Late",
+      "bytes": "a10101",
+      "expect": {"tag": "WrongType", "expected": "text"},
+      "why": "M17: MISSING_OK forgives only an absent key; Late.note present as an int is still WrongType, with the payload word `text`",
+      "lead": true
+    },
+    {
+      "name": "text-leading-bom",
+      "stage": "raw_decode",
+      "bytes": "64efbbbf61",
+      "expect": {"accept": true},
+      "why": "U+FEFF (ef bb bf) opening a text string is ordinary text: decode keeps it and re-encoding writes it back; a UTF-8 decoder must not strip it as a byte-order mark",
+      "lead": true
+    },
+    {
+      "name": "simple-undefined",
+      "stage": "raw_decode",
+      "bytes": "f7",
+      "expect": {"tag": "UnsupportedInfo", "info": 23},
+      "why": "major 7 info 23 (undefined) is none of the kept values: false, true, null and the three floats",
+      "lead": true
+    },
+    {
+      "name": "simple-zero",
+      "stage": "raw_decode",
+      "bytes": "e0",
+      "expect": {"tag": "UnsupportedInfo", "info": 0},
+      "why": "major 7 info 0 (simple value 0) is none of the kept values",
+      "lead": true
+    },
+    {
+      "name": "simple-one-byte-torn",
+      "stage": "raw_decode",
+      "bytes": "f8",
+      "expect": {"tag": "UnsupportedInfo", "info": 24},
+      "why": "major 7 info 24 (a one-byte simple value) whose argument byte is missing: the initial byte decides, so its argument is never read (CD-E5 step 2)",
+      "lead": true
+    },
+    {
+      "name": "shapes-filled",
+      "stage": "from_cbor",
+      "schema": "Shapes",
+      "bytes": "b3013903e702f93e00036f6e61c3af766520e2988320f09d849e0443007fff05f5060107a10101080709000aa101000b83012119012c0c82a10100a101010d838201028081030e82a20161610201a201616202210f82a201f40201a201f502001082a2010202a10101a2010a02a10100118204051282a20161780200a2016179020913646c617465",
+      "expect": {"accept": true},
+      "why": "every field shape set, the optional ones included, decodes and re-encodes to these bytes: a half-width float, non-ASCII text, a nested list holding an empty list, and two entries in each map",
+      "lead": true
+    },
+    {
+      "name": "shapes-sparse",
+      "stage": "from_cbor",
+      "schema": "Shapes",
+      "bytes": "b3010002f900000360044005f4060007a1010008f609f60af60b800c800d800e800f80108011f612f613f6",
+      "expect": {"accept": true},
+      "why": "every optional field null, every collection empty and the MISSING_OK field present as null: decodes and re-encodes to these bytes",
+      "lead": true
+    },
+    {
+      "name": "shapes-missing-ok-absent",
+      "stage": "from_cbor",
+      "schema": "Shapes",
+      "bytes": "b2010002f900000360044005f4060007a1010008f609f60af60b800c800d800e800f80108011f612f6",
+      "expect": {"accept": true, "reencode": "b3010002f900000360044005f4060007a1010008f609f60af60b800c800d800e800f80108011f612f613f6"},
+      "why": "shapes-sparse without the MISSING_OK key 19 decodes, and re-encodes with it as null: shapes-sparse's bytes",
+      "lead": true
+    },
+    {
+      "name": "map-str-key-order",
+      "stage": "from_cbor",
+      "schema": "Shapes",
+      "bytes": "b3010002f900000360044005f4060007a1010008f609f60af60b800c800d800e83a20161610203a20163efbfbf0201a20164f090808002020f80108011f612f613f6",
+      "expect": {"accept": true},
+      "why": "shapes-sparse whose map<str,int> holds the keys U+FFFF, U+10000 and \"a\", written in code point order (\"a\", U+FFFF, U+10000), which is UTF-8 byte order; a codec that sorts str keys by UTF-16 code unit puts U+10000 (d800 dc00) before U+FFFF and does not re-encode these bytes",
+      "lead": true
+    },
+    {
+      "name": "map-str-key-duplicate",
+      "stage": "from_cbor",
+      "schema": "Shapes",
+      "bytes": "b3010002f900000360044005f4060007a1010008f609f60af60b800c800d800e82a20161610201a201616102020f80108011f612f613f6",
+      "expect": {"tag": "DuplicateMapKey", "key": "a"},
+      "why": "shapes-sparse whose map<str,int> holds two entries keyed \"a\": a repeated key is refused whatever its type, and its key payload is the key as text, a str as itself (TautCheckedDecode.md \u00a78 question 9)",
+      "lead": true
+    },
+    {
+      "name": "map-bool-key-duplicate",
+      "stage": "from_cbor",
+      "schema": "Shapes",
+      "bytes": "b3010002f900000360044005f4060007a1010008f609f60af60b800c800d800e800f82a201f50200a201f50201108011f612f613f6",
+      "expect": {"tag": "DuplicateMapKey", "key": "true"},
+      "why": "shapes-sparse whose map<bool,Mode> holds two entries keyed true: DuplicateMapKey with the key as text, a bool as `true` or `false` (question 9)",
+      "lead": true
+    },
+    {
+      "name": "list-nested-wrong-type",
+      "stage": "from_cbor",
+      "schema": "Shapes",
+      "bytes": "b3010002f900000360044005f4060007a1010008f609f60af60b800c800d818161780e800f80108011f612f613f6",
+      "expect": {"tag": "WrongType", "expected": "int"},
+      "why": "shapes-sparse whose list<list<int>> holds [[\"x\"]]: an inner list's item is checked as an int",
+      "lead": true
+    },
+    {
+      "name": "unknown-field-round-trip",
+      "stage": "from_cbor",
+      "schema": "Empty",
+      "bytes": "a10100",
+      "expect": {"accept": true},
+      "expect_dropping": {"accept": true, "reencode": "a0"},
+      "why": "Empty holding a field 1 it does not know: python, typescript and every <target>/fc keep the unknown field and write it back; the seven generated without forward-compat drop it and re-encode the empty map",
+      "lead": true
+    },
+    {
+      "name": "unknown-field-beside-known",
+      "stage": "from_cbor",
+      "schema": "IntBox",
+      "bytes": "a301070281a201010220036178",
+      "expect": {"accept": true},
+      "expect_dropping": {"accept": true, "reencode": "a201070281a201010220"},
+      "why": "an IntBox {n: 7, by_id: {1: -1}} beside an unknown field 3 = \"x\": a codec that keeps unknown fields writes field 3 back after the known ones, one that drops them writes the IntBox alone",
+      "lead": true
+    },
+    {
+      "name": "names-round-trip",
+      "stage": "from_cbor",
+      "schema": "Names",
+      "bytes": "b81e010102020361630404050506060707088201020982a20161610201a201616202020a0a0b0b0c0c0d0d0e0e0f0f1010111112121382617861791414151516161717181818181819f5181a181a181b82a201010202a201030204181c181c181d181d181e181e",
+      "expect": {"accept": true},
+      "why": "every Names field set: fields named like the locals, parameters and unqualified helpers the generators emit (a Java field `m`, a C++ field `b`) generate, compile, decode and re-encode to these bytes",
+      "lead": true
+    }
+  ]
+}
