@@ -128,9 +128,9 @@ export type {
 } from "./taut/gen/shape_swmr.ts";
 
 export { CrdtNode } from "./crdt/engine.ts";
-export type { CrdtInput, CrdtNodeOptions, CrdtOutput } from "./crdt/engine.ts";
-export { encodeTextDelete, encodeTextInsert, projectText } from "./crdt/text.ts";
-export type { TextProjection } from "./crdt/text.ts";
+export type { CrdtCheckpoint, CrdtInput, CrdtNodeOptions, CrdtOutput } from "./crdt/engine.ts";
+export { checkpointText, restoreText, encodeTextDelete, encodeTextInsert, projectText } from "./crdt/text.ts";
+export type { TextCheckpoint, TextProjection } from "./crdt/text.ts";
 export type {
   CrdtApply,
   CrdtBootstrap,

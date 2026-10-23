@@ -1,5 +1,24 @@
 # @owebeeone/taut-shape
 
+### Incremental CRDT development checks
+
+`CrdtNode` retains pending work separately from integrated history. Text projection
+decodes new operations and resets explicitly on an integrated equivocation.
+Local versioned structured-clone engine and text checkpoints MUST be saved as a
+matching pair; these are trusted local caches, not wire messages or an untrusted
+import format. Visible text materialization still traverses current elements.
+Checkpoints retain operation history; they do not implement compaction.
+
+The normal tests include bounded seeded delivery schedules. Extended testing:
+`CRDT_FUZZ_SEEDS=400 node --experimental-strip-types --test tests/crdt_fuzz.test.ts`.
+Use `CRDT_FUZZ_START=<seed> CRDT_FUZZ_SEEDS=1` to replay a reported failure.
+The incremental/full-rebuild comparison complements the independent oracle
+corpus; random schedules do not prove correctness for every possible history.
+
+Run `node --experimental-strip-types bench/crdt_incremental.ts` for work counts,
+local timings, serialized checkpoint bytes and approximate heap deltas. Timing
+and heap numbers are diagnostic; deterministic counters are the CI assertions.
+
 Pure-TypeScript implementation of Taut delivery shapes. Its `AtomNode`, `LogNode`,
 bounded live `StreamNode`, and attributed LWW `ValueNode` are mailbox engines with no I/O, clock, or callbacks,
 kept honest by cross-language behavioral oracles.
