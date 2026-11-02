@@ -1,7 +1,8 @@
 // GENERATED TypeScript; typescript-oneof-reference.1; descriptor=1; codec=1; owner=taut.typescript.foundation
 import * as _taut from "../../../foundation/cjs/foundation.js";
 if (typeof _taut.requireFoundation !== "function") throw new globalThis.Error("compatible TypeScript descriptor/codec foundation required; regenerate/rebind runtime");
-_taut.requireFoundation();
+if (!_taut.Foundation || typeof _taut.Foundation !== "object" || _taut.Foundation.owner !== "taut.typescript.foundation" || _taut.Foundation.descriptorContract !== 1 || _taut.Foundation.codecContract !== 1 || !globalThis.Array.isArray(_taut.Foundation.capabilities) || ["codec.v1", "descriptors.v1", "oneof.v1"].some(c => !_taut.Foundation.capabilities.includes(c))) throw new globalThis.Error("selected TypeScript foundation lacks a valid owner token (incompatible owner/contracts); regenerate/rebind owner");
+if (_taut.requireFoundation(_taut) !== _taut.Foundation) throw new _taut.ConfigurationError("selected TypeScript foundation lacks namespace-checked guard support; regenerate/rebind owner");
 export type ValueMsgType = "set" | "read" | "read_response" | "diagnostic";
 export const ValueMsgTypeDescriptor = new _taut.EnumDescriptor("ValueMsgType", "shape_value.ValueMsgType", {["set"]:0n,["read"]:1n,["read_response"]:2n,["diagnostic"]:3n}, {}, {["set"]:{},["read"]:{},["read_response"]:{},["diagnostic"]:{}}, "f7368136bca27637724b0f4fc36b0491ded8a628190c3032ac8bdb79702cc0bd");
 export type ValueState = "data" | "empty";

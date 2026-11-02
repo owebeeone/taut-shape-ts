@@ -26,7 +26,8 @@ writeFileSync(join(out,'tsconfig.json'),JSON.stringify(config,null,2)+'\n');
 if(selectedOwner) {
   const owner=require(join(selectedOwner,'foundation.js'));
   if(typeof owner.requireFoundation!=='function') throw Error('selected source foundation lacks mandatory contracts; regenerate/rebind');
-  owner.requireFoundation();
+  if(!owner.Foundation || typeof owner.Foundation!=='object' || owner.Foundation.owner!=='taut.typescript.foundation' || owner.Foundation.descriptorContract!==1 || owner.Foundation.codecContract!==1 || owner.requireFoundation(owner)!==owner.Foundation)
+    throw Error('selected source foundation lacks a valid owner token or namespace-checked guard support; regenerate/rebind');
   mkdirSync(join(out,'cjs'),{recursive:true});
   for(const name of Object.keys(provenance.sources).map(n=>n.slice(0,-3))) {
     // Build-time binding to one actual owner, never two evaluations of the sources.

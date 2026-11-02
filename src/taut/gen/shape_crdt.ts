@@ -1,7 +1,8 @@
 // GENERATED TypeScript; typescript-oneof-reference.1; descriptor=1; codec=1; owner=taut.typescript.foundation
 import * as _taut from "../../../foundation/cjs/foundation.js";
 if (typeof _taut.requireFoundation !== "function") throw new globalThis.Error("compatible TypeScript descriptor/codec foundation required; regenerate/rebind runtime");
-_taut.requireFoundation();
+if (!_taut.Foundation || typeof _taut.Foundation !== "object" || _taut.Foundation.owner !== "taut.typescript.foundation" || _taut.Foundation.descriptorContract !== 1 || _taut.Foundation.codecContract !== 1 || !globalThis.Array.isArray(_taut.Foundation.capabilities) || ["codec.v1", "descriptors.v1", "oneof.v1"].some(c => !_taut.Foundation.capabilities.includes(c))) throw new globalThis.Error("selected TypeScript foundation lacks a valid owner token (incompatible owner/contracts); regenerate/rebind owner");
+if (_taut.requireFoundation(_taut) !== _taut.Foundation) throw new _taut.ConfigurationError("selected TypeScript foundation lacks namespace-checked guard support; regenerate/rebind owner");
 export type CrdtMsgType = "apply" | "install_bootstrap" | "seal" | "close" | "read" | "read_response" | "diagnostic";
 export const CrdtMsgTypeDescriptor = new _taut.EnumDescriptor("CrdtMsgType", "shape_crdt.CrdtMsgType", {["apply"]:0n,["install_bootstrap"]:1n,["seal"]:2n,["close"]:3n,["read"]:4n,["read_response"]:5n,["diagnostic"]:6n}, {}, {["apply"]:{},["install_bootstrap"]:{},["seal"]:{},["close"]:{},["read"]:{},["read_response"]:{},["diagnostic"]:{}}, "9fe1d2722430b703fd7a56b44270714eca18f773bbbe01b2801aadacf3fe4fce");
 export type CrdtState = "data" | "empty" | "eof" | "closed" | "failed" | "bootstrap_required" | "invalid_cursor";

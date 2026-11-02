@@ -1,7 +1,8 @@
 // GENERATED TypeScript; typescript-oneof-reference.1; descriptor=1; codec=1; owner=taut.typescript.foundation
 import * as _taut from "../../../foundation/cjs/foundation.js";
 if (typeof _taut.requireFoundation !== "function") throw new globalThis.Error("compatible TypeScript descriptor/codec foundation required; regenerate/rebind runtime");
-_taut.requireFoundation();
+if (!_taut.Foundation || typeof _taut.Foundation !== "object" || _taut.Foundation.owner !== "taut.typescript.foundation" || _taut.Foundation.descriptorContract !== 1 || _taut.Foundation.codecContract !== 1 || !globalThis.Array.isArray(_taut.Foundation.capabilities) || ["codec.v1", "descriptors.v1", "oneof.v1"].some(c => !_taut.Foundation.capabilities.includes(c))) throw new globalThis.Error("selected TypeScript foundation lacks a valid owner token (incompatible owner/contracts); regenerate/rebind owner");
+if (_taut.requireFoundation(_taut) !== _taut.Foundation) throw new _taut.ConfigurationError("selected TypeScript foundation lacks namespace-checked guard support; regenerate/rebind owner");
 export type LogMsgType = "push" | "seal" | "close" | "read" | "end_stream" | "timer_expired" | "evict" | "read_response" | "set_timer" | "cancel_timer" | "producer_stop" | "diagnostic";
 export const LogMsgTypeDescriptor = new _taut.EnumDescriptor("LogMsgType", "shape_log.LogMsgType", {["push"]:0n,["seal"]:1n,["close"]:2n,["read"]:3n,["end_stream"]:4n,["timer_expired"]:5n,["evict"]:6n,["read_response"]:7n,["set_timer"]:8n,["cancel_timer"]:9n,["producer_stop"]:10n,["diagnostic"]:11n}, {}, {["push"]:{},["seal"]:{},["close"]:{},["read"]:{},["end_stream"]:{},["timer_expired"]:{},["evict"]:{},["read_response"]:{},["set_timer"]:{},["cancel_timer"]:{},["producer_stop"]:{},["diagnostic"]:{}}, "e36eb2f21e5fc54d9ed310b989720b43443b73e4fee8219c3000b4562108071c");
 export type LogState = "data" | "would_block" | "eof" | "closed" | "failed" | "expired";

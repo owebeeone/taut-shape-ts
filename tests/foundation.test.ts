@@ -18,6 +18,8 @@ test("foundation-only CJS and ESM package subpaths share actual state",async()=>
   const require=createRequire(import.meta.url);
   const cjs=require("@owebeeone/taut-shape/foundation");
   const esm=await import("@owebeeone/taut-shape/foundation");
+  cjs.requireFoundation(cjs);
+  cjs.requireFoundation(esm);
   for(const key of ["Foundation","MessageDescriptor","ValidationIssue","ValidationReport","DecodeError","CborFloat"] as const)
     assert.equal(cjs[key],esm[key]);
 });
