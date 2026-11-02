@@ -1,5 +1,31 @@
 # @owebeeone/taut-shape
 
+### Shared codec and validation foundation
+
+`@owebeeone/taut-shape/foundation` is the lightweight codec, descriptor and report
+entry; `@owebeeone/taut-shape/foundation/validation` supplies the optional validation
+engine. Basic applications can import these without the delivery-engine barrel.
+CJS and ESM entries share one actual CJS owner, including codecs/errors and the
+immutable descriptor/report classes. The old `src/taut` codec modules are facades.
+All generated library interfaces now export mandatory descriptors and typed
+bindings, without acquiring constructors or validation methods.
+
+Base Taut owns the canonical sources. Development-only
+`python scripts/vendor-foundation.py --taut ../taut` records byte provenance in
+`foundation-src/provenance.json` and regenerates metadata from the existing IR.
+`pnpm build:foundation`, `pnpm typecheck` and `pnpm build` use those sources; none
+installs dependencies. Keep the frozen declared development dependencies for
+building/testing. Runtime imports need Node and the built package only.
+
+To compose with an application's already compiled source foundation, explicitly
+build aliases with `node scripts/build-foundation.mjs --owner PATH_TO_COMPILED_OWNER
+--output PATH_TO_LIBRARY/foundation` before packaging. The owner must include its
+declarations and required validation engine. This selects true module re-exports,
+without discovery, fallback or a second runtime implementation. See base Taut's
+`dev-docs/examples/typescript-oneof` for source/package examples, typed migration,
+external child bindings and actual library composition tests. JavaScript's native
+codec projection remains a separate target and owner.
+
 ### Incremental CRDT development checks
 
 `CrdtNode` retains pending work separately from integrated history. Text projection

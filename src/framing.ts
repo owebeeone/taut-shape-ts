@@ -83,7 +83,11 @@ export class MessageFrameCodec {
   ) {
     this.schema = schema;
     this.typeToMessage = typeToMessage;
-    this.tag = schema.enumDef(messageTypeEnum).members;
+    this.tag = Object.freeze(Object.fromEntries(Object.entries(schema.enumDef(messageTypeEnum).members).map(([name,value]) => {
+      if (typeof value === "bigint" ? value < 0n || value > 255n : !Number.isInteger(value) || value < 0 || value > 255)
+        throw new Error(`${messageTypeEnum}.${name}: frame tag must fit one byte`);
+      return [name, Number(value)];
+    })));
     this.tagInverse = Object.fromEntries(
       Object.entries(this.tag).map(([name, value]) => [value, name]),
     );

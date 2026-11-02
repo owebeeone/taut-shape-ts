@@ -14,6 +14,8 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "foundation",
+    "foundation-src",
     "README.md",
     "LICENSE"
   ],
@@ -21,6 +23,16 @@
     "taut-shape-tool": "./dist/cli.js"
   },
   "exports": {
+    "./foundation": {
+      "types": "./foundation/cjs/foundation.d.ts",
+      "import": "./foundation/esm/foundation.js",
+      "require": "./foundation/cjs/foundation.js"
+    },
+    "./foundation/validation": {
+      "types": "./foundation/cjs/validation.d.ts",
+      "import": "./foundation/esm/validation.js",
+      "require": "./foundation/cjs/validation.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
@@ -35,10 +47,11 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "build": "tsc --project tsconfig.build.json",
+    "build:foundation": "node scripts/build-foundation.mjs",
+    "typecheck": "node scripts/build-foundation.mjs && tsc --noEmit",
+    "build": "node scripts/build-foundation.mjs && tsc --project tsconfig.build.json",
     "prepack": "pnpm build",
-    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test": "node scripts/build-foundation.mjs && node --experimental-strip-types --test tests/*.test.ts",
     "tool": "node --experimental-strip-types src/cli.ts",
     "node": "node --experimental-strip-types src/cli.ts node",
     "client": "node --experimental-strip-types src/cli.ts client"
