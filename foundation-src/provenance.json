@@ -3,15 +3,15 @@
   "owner": "taut.typescript.foundation",
   "source": "taut/src/taut/gen/runtime/typescript",
   "sources": {
-    "cbor.ts": "4a98c2476c09efc647da13a838e05e46af28733b93d5d9fe0bb8b86d9a6ba74c",
-    "codec.ts": "bb658127b49e332fe589dd89f3e8e0e06d9b5605d8a27458451cea75cc18ee8e",
-    "descriptors.ts": "ba883571da8b70c008a58c14f5a7feb0be48948ca8678eb96b0a66bf9ed7ffac",
+    "cbor.ts": "2cc925e4389e1303cd511a14e12e93bdf3b1661214246b56ec152625b17861a6",
+    "codec.ts": "72fc7e6133f1a435778f56175b8c522cd4a56df40893bea9c575699aaf984b61",
+    "descriptors.ts": "eb6866c094a44bfe0164f2b10d596dd2f17c660fe90117b26bb781908dcce571",
     "ext.ts": "6c08845312c6f7bd5ee07be490b1397747de61846c0d663357c9df3af58e9391",
     "foundation.ts": "4d9f9247ac8540208fa05b3bddfe45e59d81fc576e60043761e740095dcb0a08",
-    "jsoncodec.ts": "514a6f44696be7ec7d100e16452045a6ad72b9a1e521471cacb13a1f4eb26bf3",
+    "jsoncodec.ts": "78beba60a159e9e59cc7b960f789ee73f684f57dfcdbd0c7bff9d298664dd5d7",
     "reports.ts": "5a22e5bf9d426808d561951490d17caf83df1543c60884ad47f307cff612af83",
-    "schema.ts": "4ac5faa18610c76ad6acde1c1ec4363d0ec304652ce76f216dd22b245353fc90",
+    "schema.ts": "ef9223379f469647ff06caaf0f4afb4894e05150ee524da4c03036fe4373a141",
     "snapshots.ts": "c2b6bfdcfb55859868af3134d5b922894a9bbe8e3d656204272335ba74948faa",
-    "validation.ts": "50adcd1d36a92dd54921b1fd3d4fb7fbdbf3ff7ebee89dc5643bc13f5e599b7f"
+    "validation.ts": "35cc0ff3d994fae78c4f5ce6a6c96e029efcc2ded53854e92f217104877d19fa"
   }
 }

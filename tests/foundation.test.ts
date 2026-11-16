@@ -23,3 +23,16 @@ test("foundation-only CJS and ESM package subpaths share actual state",async()=>
   for(const key of ["Foundation","MessageDescriptor","ValidationIssue","ValidationReport","DecodeError","CborFloat"] as const)
     assert.equal(cjs[key],esm[key]);
 });
+
+test("bigint values retain their wire type through the library foundation",()=> {
+  assert.equal(legacy.CborBigInt,foundation.CborBigInt);
+  for(const n of [0n,-1n,5n,-5n,1n<<8192n,-(1n<<8192n)]) {
+    const bytes=foundation.encode(new foundation.CborBigInt(n));
+    const value=foundation.decode(bytes);
+    assert.ok(value instanceof foundation.CborBigInt);
+    assert.equal(value.value,n);
+    assert.deepEqual(foundation.encode(value),bytes);
+  }
+  assert.throws(()=>foundation.decode(Uint8Array.of(0xc2,0x41,0)),
+    (error:unknown)=>error instanceof foundation.DecodeError && error.tag==="NonCanonicalBigInt");
+});
